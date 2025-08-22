@@ -20,8 +20,7 @@ import { move } from "@dnd-kit/helpers";
 import RightSidebar from "./RightSidebar";
 import { Tooltip } from "../../components/ui/tooltip";
 import ExportDialog from "./components/ExportDialog";
-
-
+import { countObjectsByType } from "./utils";
 
 export default function Dashboard() {
   const [zoom, setZoom] = useState<number>(0.5);
@@ -89,6 +88,13 @@ export default function Dashboard() {
       alert("Please select a canvas first.");
       return;
     }
+
+    const totalFabricImage = countObjectsByType(selectedCanvas, FabricImage);
+    if (totalFabricImage >= 2) {
+      alert("You can only add up to 2 frames.");
+      return;
+    }
+
     const phoneImg = await FabricImage.fromURL(phoneImageURL);
     // Get screen dimensions from the frame image
 
@@ -264,7 +270,6 @@ export default function Dashboard() {
                 <Type size={18} />
               </button>
             </Tooltip>
-           
           </header>
         </div>
         <div className=" ">
@@ -312,7 +317,7 @@ export default function Dashboard() {
                           deleteCanvas={deleteCanvas}
                           onClick={() => setSelectedCanvasId(item.id)}
                           isActive={item.id === selectedCanvasId}
-                          className={`p-2  `}
+                          className={`p-2 `}
                           id={item.id}
                           index={index}
                           bgColor="#1a1a1b"
@@ -332,7 +337,6 @@ export default function Dashboard() {
       <aside className="w-3/12  bg-white border-l border-gray-100 p-4 shadow-sm max-h-screen max-w-full  no-scrollbar ">
         <div className="mb-4  w-full">
           <ExportDialog sortedCanvasItems={sortedCanvasItems} />
-          
         </div>
         <RightSidebar selectedCanvas={selectedCanvas} />
       </aside>

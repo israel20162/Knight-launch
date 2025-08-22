@@ -1,5 +1,5 @@
-import {  ChevronDown } from "lucide-react";
-import {  useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { DeviceType } from "../../../types";
 import { useAppContext } from "../../../context/AppContext";
 import { devices } from "../utils/devices";
@@ -12,7 +12,6 @@ export const DeviceSelector = ({
   onDeviceSelect,
 }: //   selectedDevice,
 DeviceSelectorProps) => {
- 
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>(devices[0]);
   // saves current device to global context

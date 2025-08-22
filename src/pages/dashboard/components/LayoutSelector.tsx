@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { CanvasComponent } from "../../../components/CanvasComponent";
 import type { CanvasItem, layoutType } from "../../../types";
 import { layouts } from "../utils/layouts";
+import { countObjectsByType } from "../utils";
 interface LayoutSelectorProps {
   selectedCanvas: Canvas | undefined;
 }
@@ -10,13 +11,18 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
   selectedCanvas,
 }) => {
   const [_, setCanvasItems] = useState<CanvasItem[]>([]);
-
+  const deviceLayouts = layouts();
   const layoutCanvasHeight = 192;
   const layoutCanvaswidth = 108;
 
   const add = async (items: layoutType) => {
     if (!selectedCanvas) {
       alert("No canvas selected!");
+      return;
+    }
+    const totalFabricImage = countObjectsByType(selectedCanvas, FabricImage);
+    if (totalFabricImage >= 2) {
+      alert("You can only add up to 2 frames.");
       return;
     }
     const text = new IText(items.text.value, {
@@ -58,14 +64,11 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
     selectedCanvas?.add(text);
   };
 
-  
-
- 
   // Callback to store the canvas instance when initialized
   const handleCanvasReady = useCallback(() => {}, []);
   useEffect(() => {
     const setLayouts = () => {
-      layouts.map((layout) => {
+      deviceLayouts.map((layout) => {
         const newId = `canvas-${layout.id}`;
         setCanvasItems([{ id: newId }]);
       });
@@ -76,8 +79,8 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
   }, []);
 
   return (
-    <div className="grid grid-cols-2 gap-1">
-      {layouts.map((item, index) => (
+    <div className="grid grid-cols-2 gap-2 p-2">
+      {deviceLayouts.map((item, index) => (
         <div key={item.id} onClick={() => add(item)} className={`p- `}>
           <CanvasComponent
             height={layoutCanvasHeight}

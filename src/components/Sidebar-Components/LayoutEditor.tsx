@@ -9,7 +9,7 @@ interface LayoutEditorProps {
 export const LayoutEditor: React.FC<LayoutEditorProps> = ({
   selectedCanvas,
 }) => {
-  const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
+  const [_, setCanvasItems] = useState<CanvasItem[]>([]);
 
   const layoutCanvasHeight = 140;
   const layoutCanvaswidth = 100;

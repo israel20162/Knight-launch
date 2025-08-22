@@ -1,5 +1,6 @@
 import { Canvas, FabricText, type TFiller } from "fabric";
 import { useState, useEffect } from "react";
+import { Button } from "@radix-ui/themes";
 
 interface TextEditorProps {
   selectedCanvas: Canvas | undefined;
@@ -10,7 +11,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
   const [fontSize, setFontSize] = useState<number>();
   const [selText, setSelText] = useState<string>();
   const [fontFamily, setFontFamily] = useState<string>();
-   const [fontWeight, setFontWeight] = useState<string>("normal");
+  const [fontWeight, setFontWeight] = useState<string>("normal");
   const [lineHeight, setLineHeight] = useState<number>();
   const [strokeColor, setStrokeColor] = useState<string | TFiller>("#000000");
   const [backgroundColor, setBackgroundColor] = useState<string | TFiller>(
@@ -23,8 +24,8 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
     if (activeObject && activeObject instanceof FabricText) {
       setSelectedText(activeObject);
       setIsActive(true);
-    }else{
-      setIsActive(false)
+    } else {
+      setIsActive(false);
     }
 
     return () => {};
@@ -65,16 +66,23 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
     return <div className="p-4">Select a canvas to edit text.</div>;
   }
 
-
   const updateTextProperty = (property: string, value: any) => {
     if (selectedText) {
       selectedText.set(property as keyof FabricText, value);
       selectedCanvas.renderAll();
     }
   };
+  const deleteText = () => {
+    const activeObject = selectedCanvas.getActiveObject();
+    if (selectedText && activeObject instanceof FabricText) {
+      selectedCanvas.remove(activeObject);
+    }
+    selectedCanvas.renderAll();
+  };
   return (
-    <div className="w-full mx-auto ">
+    <div className="w-full mx-auto mb-12 flex flex-col ">
       <h2 className="text-lg font-bold mb-2">Edit Text </h2>
+
       <div className="mb-2">
         <label
           className={`block text-sm font-medium ${!isActive && "opacity-50"}`}
@@ -213,15 +221,13 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
             setFontFamily(e.target.value);
             updateTextProperty("fontFamily", e.target.value);
           }}
-          defaultValue={'helvetica'}
+          defaultValue={"helvetica"}
           disabled={!isActive}
           className={`w-full p-2 border rounded ${!isActive && "opacity-50"}`}
         >
           <option value="Arial">Arial</option>
           <option value="Times New Roman">Times New Roman</option>
-          <option value="helvetica" >
-            Helvetica
-          </option>
+          <option value="helvetica">Helvetica</option>
           <option value="myriad pro">Myriad Pro</option>
           <option value="delicious">Delicious</option>
           <option value="verdana">Verdana</option>
@@ -341,6 +347,14 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
           disabled={!isActive}
           id="text-font-size"
         />
+        {isActive && (
+          <Button
+            className="!bg-red-500 hover:!bg-red-600 cursor-pointer mt-4"
+            onClick={deleteText}
+          >
+            Delete Text
+          </Button>
+        )}
       </div>
     </div>
   );

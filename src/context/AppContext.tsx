@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import { type DeviceType } from '../types/index';
+import { Phone } from "lucide-react";
 
 interface AppContextType {
   currentFrameScreenWidth: number;
@@ -9,7 +10,7 @@ interface AppContextType {
  device: DeviceType;
  updateDevice:(device:DeviceType)=>void
 }
-const AppContext = createContext<AppContextType>({
+export const AppContext = createContext<AppContextType>({
   currentFrameScreenWidth: 0,
   currentFrameScreenHeight: 0,
   updateScreenWidth: () => {},
@@ -19,7 +20,9 @@ const AppContext = createContext<AppContextType>({
     type: "iphone",
     width: 0,
     height: 0,
-    imageUrl: ""
+    imageUrl: "",
+    icon: Phone,
+    category: "mobile",
   },
   updateDevice:()=>{}
 });
@@ -38,6 +41,8 @@ export const AppContextProvider: React.FC<{ children: React.ReactNode }> = ({
       width: 0,
       height: 0,
       imageUrl: "",
+      icon: Phone,
+      category: "mobile",
     });
 
   const updateScreenWidth = (newVal: number) => {
