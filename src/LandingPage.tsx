@@ -4,7 +4,7 @@ import { Link } from "react-router";
 import Header from "./components/Header";
 const Landing = () => {
   return (
-    <div className="max-w-full mx-auto">
+    <div className="">
       <Header />
       <div className="max-h-screen  bg-gradient-to-br overflow-scroll from-slate-50 via-blue-50 to-indigo-100">
         {/* Hero Section */}
