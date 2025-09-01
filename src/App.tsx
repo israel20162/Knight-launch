@@ -6,8 +6,8 @@ import Dashboard from "./pages/dashboard";
 function App() {
   return (
     <>
-      <div className="max-h-screen max-w-screen overflow-x-auto overflow-y-hidden   flex no-scrollbar flex-col">
-        <div className="flex flex-1 no-scrollbar">
+      <div className="max-h-screen  overflow-y-hidden   flex no-scrollbar flex-col">
+        
           <div className="">
             <Routes>
               <Route path="/" element={<Landing />} />
@@ -15,7 +15,7 @@ function App() {
               <Route path="/create-project" element={<CreateProject />} />
               <Route path="/project/:projectId" element={<ProjectPage />} />
             </Routes>
-          </div>
+         
         </div>
       </div>
     </>

@@ -4,9 +4,9 @@ import { Link } from "react-router";
 import Header from "./components/Header";
 const Landing = () => {
   return (
-    <>
+    <div className="max-w-full mx-auto">
       <Header />
-      <div className="max-h-screen mx-auto max-w-5xl bg-gradient-to-br overflow-scroll from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-h-screen  bg-gradient-to-br overflow-scroll from-slate-50 via-blue-50 to-indigo-100">
         {/* Hero Section */}
         <section className="container mx-auto px-4 py-16 text-center">
           <div className=" mx-auto">
@@ -153,7 +153,7 @@ const Landing = () => {
           </div>
         </section>
       </div>
-    </>
+    </div>
   );
 };
 
