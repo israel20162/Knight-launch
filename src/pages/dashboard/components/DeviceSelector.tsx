@@ -52,6 +52,7 @@ DeviceSelectorProps) => {
                       <button
                         key={device.id}
                         onClick={() => {
+                          setSelectedDevice(device);
                           onDeviceSelect?.(device.imageUrl);
                           setSelectedDevice(device);
                           updateDevice(device);

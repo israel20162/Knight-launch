@@ -21,6 +21,7 @@ import RightSidebar from "./RightSidebar";
 import { Tooltip } from "../../components/ui/tooltip";
 import ExportDialog from "./components/ExportDialog";
 import { countObjectsByType } from "./utils";
+import Logo from "../../components/ui/logo";
 
 export default function Dashboard() {
   const [zoom, setZoom] = useState<number>(0.5);
@@ -228,7 +229,9 @@ export default function Dashboard() {
     <div className="flex  bg-gray-100">
       {/* Left Sidebar */}
       <aside className="w-3/12  bg-white border-r border-gray-100 p-4 shadow-sm max-h-screen no-scrollbar overflow-scroll">
-        <h2 className="text-lg font-bold mb-4">Left Panel</h2>
+        <h2 className="text-lg font-bold mb-4">
+          <Logo />
+        </h2>
         <LeftSidebar
           addFrame={addFrame}
           addCanvas={addNewCanvas}
@@ -307,8 +310,13 @@ export default function Dashboard() {
                     onDragEnd={(event) => {
                       setSortedCanvasItems((items) => move(items, event));
                     }}
+                    onDragMove={({ operation }) => {
+                      const { position } = operation;
+                      console.log("Current position:", position);
+                    }}
+                    // modifiers={[RestrictToWindow]}
                   >
-                    <div className="!flex flex-1/3 items-center overflow-scroll no-scrollbar ">
+                    <div className="!flex flex-1/3 ease-in-out items-center overflow-scroll no-scrollbar ">
                       {canvasItems.map((item, index) => (
                         <CanvasComponent
                           key={index}
@@ -321,6 +329,11 @@ export default function Dashboard() {
                           id={item.id}
                           index={index}
                           bgColor="#1a1a1b"
+                          transition={{
+                            duration: 5,
+                            idle: false,
+                            easing: "ease-in-out",
+                          }}
                           onCanvasReady={handleCanvasReady}
                         />
                       ))}

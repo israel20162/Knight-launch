@@ -17,13 +17,15 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     width,
     height,
     bgColor,
+    transition,
     items,
   }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricCanvasRef = useRef<HTMLDivElement>(null);
-    const { ref, handleRef } = useSortable({
+    const { ref, handleRef, isDragging, isDropping } = useSortable({
       id,
       index,
+      transition,
     });
     useEffect(() => {
       if (canvasRef.current) {
@@ -86,15 +88,20 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
 
     return (
       <div
-        className={` p-2 ${className} ${
+        className={` p-2  ${className} ${
           isActive ? "border border-blue-500" : ""
-        } `}
+        } ${isDragging || isDropping ? `!size-[55%] opacity-90` : ""}`}
         onClick={onClick}
         ref={!items?.text && !items?.frame ? ref : fabricCanvasRef}
       >
         <div>
           {/* {id} */}
-          <canvas ref={canvasRef} />
+          <canvas
+            className={`${
+              isDragging || isDropping ? `!size-[55%] opacity-90` : ""
+            }`}
+            ref={canvasRef}
+          />
         </div>
         {!items?.text && !items?.frame && (
           <div className="flex space-x-4 justify-end mt-2 ">

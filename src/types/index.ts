@@ -53,8 +53,8 @@ export interface DeviceType {
   width: number;
   height: number;
   imageUrl: string;
-  rx?:number
-  ry?:number
+  rx?: number
+  ry?: number
 
 }
 
@@ -63,41 +63,42 @@ export interface CanvasItem {
   canvas?: Canvas;
 }
 
-export interface CanvasComponentProps{
-  
+export interface CanvasComponentProps {
+
   id: string;
   index: number;
-  onClick ?: () => void;
-  deleteCanvas:(id:string)=>void
+  onClick?: () => void;
+  deleteCanvas: (id: string) => void
   onCanvasReady: (id: string, canvas: Canvas) => void;
-  isActive ?: boolean;
-  width ?: number;
-  height ?: number;
-  bgColor ?: string;
-  items ?: layoutType;
-  className ?: string;
+  isActive?: boolean;
+  width?: number;
+  height?: number;
+  bgColor?: string;
+  items?: layoutType;
+  className?: string;
+  transition: { duration?: number; easing?: string; idle: boolean } | null
   // selectedCanvas?: Canvas | undefined;
 
 }
 
-export  interface layoutType {
-        id: number;
-        text: {
-            value: string;
-            left?: number;
-            top?: number;
-            originX?: string;
-            fontSize?: number;
-            fill?: string;
-        };
-        frame: {
-            url: string;
-            originX?: string;
-            originY?: string;
-            left: number;
-            top: number;
-            scaleX?: number;
-            scaleY?: number;
-            angle?:number
-        };
-    }
+export interface layoutType {
+  id: number;
+  text: {
+    value: string;
+    left?: number;
+    top?: number;
+    originX?: string;
+    fontSize?: number;
+    fill?: string;
+  };
+  frame: {
+    url: string;
+    originX?: string;
+    originY?: string;
+    left: number;
+    top: number;
+    scaleX?: number;
+    scaleY?: number;
+    angle?: number
+  };
+}
