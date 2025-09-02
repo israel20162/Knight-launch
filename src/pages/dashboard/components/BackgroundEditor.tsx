@@ -2,12 +2,16 @@ import { useEffect, useState } from "react";
 import { Canvas, Gradient, FabricImage, type TFiller } from "fabric";
 import { SegmentedControl } from "@radix-ui/themes";
 import { ChevronDown } from "lucide-react";
+import type { CanvasItem } from "../../../types";
+
 interface BackgroundEditorProps {
   selectedCanvas: Canvas | undefined;
+  allCanvases: CanvasItem[]; // Added prop to handle all canvases
 }
 
 export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   selectedCanvas,
+  allCanvases, // Added prop
 }) => {
   const [backgroundColor, setBackgroundColor] = useState<string | TFiller>(
     "#1a1a1a"
@@ -22,7 +26,6 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   >("vertical");
   const [canvasWidth, setCanvasWidth] = useState(800);
   const [canvasHeight, setCanvasHeight] = useState(600);
-  // const [canvasOpacity, setCanvasOpacity] = useState(1);
   const [openAccordion, toggleAccordion] = useState<"size" | "presets" | null>(
     null
   );
@@ -30,13 +33,24 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   useEffect(() => {
     if (!selectedCanvas) return;
 
-    setBackgroundColor(selectedCanvas.backgroundColor);
-    setCanvasWidth(selectedCanvas.width || 800);
-    setCanvasHeight(selectedCanvas.height || 600);
+    // Only update state if the canvas has changed to avoid resetting
+    const currentBackground = selectedCanvas.backgroundColor;
+    if (currentBackground !== backgroundColor) {
+      setBackgroundColor(currentBackground || "#1a1a1a");
+    }
+    if (selectedCanvas.width !== canvasWidth) {
+      setCanvasWidth(selectedCanvas.width || 800);
+    }
+    if (selectedCanvas.height !== canvasHeight) {
+      setCanvasHeight(selectedCanvas.height || 600);
+    }
 
     const handleSelection = () => {
       if (selectedCanvas) {
-        setBackgroundColor(selectedCanvas.backgroundColor);
+        const newBackground = selectedCanvas.backgroundColor;
+        if (newBackground !== backgroundColor) {
+          setBackgroundColor(newBackground || "#1a1a1a");
+        }
       }
     };
 
@@ -47,7 +61,8 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
       selectedCanvas.off("selection:created", handleSelection);
       selectedCanvas.off("selection:updated", handleSelection);
     };
-  }, [selectedCanvas]);
+  }, [selectedCanvas, backgroundColor, canvasWidth, canvasHeight]);
+
 
   if (!selectedCanvas) {
     return (
@@ -110,20 +125,48 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && selectedCanvas) {
+    if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const imgUrl = event.target?.result as string;
         const img = new Image();
         img.onload = () => {
-          const fabricImg = new FabricImage(img, {
-            scaleX: selectedCanvas.width / img.width,
-            scaleY: selectedCanvas.height / img.height,
-          });
+          // Apply to selected canvas
+          if (selectedCanvas) {
+            const fabricImg = new FabricImage(img, {
+              scaleX: selectedCanvas.width / img.width,
+              scaleY: selectedCanvas.height / img.height,
+            });
+            selectedCanvas.set("backgroundImage", fabricImg);
+            selectedCanvas.renderAll();
+          }
+        };
+        img.src = imgUrl;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-          selectedCanvas.set("backgroundImage", fabricImg);
-          // selectedCanvas.sendObjectToBack(fabricImg);
-          selectedCanvas.renderAll();
+  const applyImageToAllCanvases = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imgUrl = event.target?.result as string;
+        const img = new Image();
+        img.onload = () => {
+          allCanvases?.forEach((canvas) => {
+            const fabricImg = new FabricImage(img, {
+              scaleX: canvas.canvas?.width
+                ? canvas.canvas?.width / img.width
+                : 322 / img.width,
+              scaleY: canvas.canvas?.height
+                ? canvas.canvas?.height / img.height
+                : 640 / img.height,
+            });
+            canvas.canvas?.set("backgroundImage", fabricImg);
+            canvas.canvas?.renderAll();
+          });
         };
         img.src = imgUrl;
       };
@@ -136,7 +179,6 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
       <h2 className="text-lg font-bold mb-2 mt-4">Edit Background</h2>
 
       {/* Background Type Selector */}
-      {/* Tabs for Background Type */}
       <div className="mb-4 flex justify-center">
         <div className="flex">
           {["solid", "gradient", "image"].map((type) => (
@@ -234,13 +276,13 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
       {/* Image Upload */}
       {backgroundType === "image" && (
         <div className="space-y-4 mb-4">
-          <div className="flex justify-center mb-6 ">
-            <div className=" w-full rounded-lg shadow-xl ">
-              <div className="">
+          <div className="flex justify-center mb-6">
+            <div className="w-full rounded-lg shadow-xl">
+              <div>
                 <label className="inline-block mb-2 text-gray-500">
-                  File Upload
+                  File Upload (Selected Canvas)
                 </label>
-                <div className="flex items-center justify-center w-full ">
+                <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col w-full h-32 border-4 border-blue-200 border-dashed hover:bg-blue-100 hover:border-blue-300 hover:text-white cursor-pointer">
                     <div className="flex flex-col items-center justify-center pt-7">
                       <svg
@@ -270,17 +312,46 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
                   </label>
                 </div>
               </div>
-              <div className="flex justify-center ">
-                {/* <button className="w-full px-4 py-2 text-white bg-blue-500 rounded shadow-xl">
-                  Create
-                </button> */}
+              <div className="mt-4">
+                <label className="inline-block mb-2 text-gray-500">
+                  File Upload (All Canvases)
+                </label>
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col w-full h-32 border-4 border-blue-200 border-dashed hover:bg-blue-100 hover:border-blue-300 hover:text-white cursor-pointer">
+                    <div className="flex flex-col items-center justify-center pt-7">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-8 h-8 text-gray-400 group-hover:text-gray-100"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p className="pt-1 text-sm tracking-wider text-gray-400 group-hover:text-gray-100">
+                        Attach a file for all canvases
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={applyImageToAllCanvases}
+                      className="opacity-0"
+                    />
+                  </label>
+                </div>
               </div>
             </div>
           </div>
 
           <SegmentedControl.Root
             defaultValue="Fit"
-            className="grid grid-cols-3 "
+            className="grid grid-cols-3"
             onValueChange={(value) => {
               if (value && selectedCanvas?.backgroundImage) {
                 const img = selectedCanvas.backgroundImage;
@@ -314,7 +385,7 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
               <SegmentedControl.Item value={action}>
                 <span
                   key={action}
-                  className=" whitespace-nowrap text-center  text-gray-700 rounded text-xs "
+                  className="whitespace-nowrap text-center text-gray-700 rounded text-xs"
                 >
                   {action}
                 </span>
@@ -323,13 +394,10 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
           </SegmentedControl.Root>
           <button
             onClick={async () => {
-              const fabricImg = await FabricImage.fromURL("");
-              if (selectedCanvas.backgroundImage) {
-                selectedCanvas.backgroundImage = fabricImg;
-                // selectedCanvas.
+              if (selectedCanvas) {
+                selectedCanvas.set("backgroundImage", null);
+                selectedCanvas.requestRenderAll();
               }
-
-              selectedCanvas.requestRenderAll();
             }}
             className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition-colors"
           >
@@ -338,35 +406,15 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
         </div>
       )}
 
-      {/* Canvas Opacity */}
-      {/* <div className="mb-4">
-        <label className="block text-sm font-medium mb-1 text-gray-700">
-          Canvas Opacity: {Math.round(canvasOpacity * 100)}%
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.1"
-          value={canvasOpacity}
-          onChange={(e) => {
-            const opacity = Number(e.target.value);
-            setCanvasOpacity(opacity);
-            updateCanvasProperty("opacity", opacity);
-          }}
-          className="w-full"
-        />
-      </div> */}
       <section className="divide-y divide-gray-200 mt-6">
-        {/* Accordion: Canvas Size */}
-        <div className="mb-4  ">
+        <div className="mb-4">
           <button
             onClick={() =>
               toggleAccordion(openAccordion === "size" ? null : "size")
             }
             className="w-full flex justify-between items-center px-2 py-3 font-medium"
           >
-            <span className="flex items-center gap-2"> Canvas Size</span>
+            <span className="flex items-center gap-2">Canvas Size</span>
             <ChevronDown
               className={`w-4 h-4 transition-transform ${
                 openAccordion === "size" ? "rotate-180" : ""
@@ -409,15 +457,14 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
           )}
         </div>
 
-        {/* Accordion: Quick Presets */}
-        <div className="mb-4 ">
+        <div className="mb-4">
           <button
             onClick={() =>
               toggleAccordion(openAccordion === "presets" ? null : "presets")
             }
             className="w-full flex justify-between items-center px-2 py-3 font-medium"
           >
-            <span className="flex items-center gap-2"> Quick Presets</span>
+            <span className="flex items-center gap-2">Quick Presets</span>
             <ChevronDown
               className={`w-4 h-4 transition-transform ${
                 openAccordion === "presets" ? "rotate-180" : ""

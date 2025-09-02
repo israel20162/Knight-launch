@@ -90,11 +90,10 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
       <div
         className={` p-2  ${className} ${
           isActive ? "border border-blue-500" : ""
-        } ${isDragging || isDropping ? `!size-[55%] opacity-90` : ""}`}
-        onClick={onClick}
+        } `}
         ref={!items?.text && !items?.frame ? ref : fabricCanvasRef}
       >
-        <div>
+        <div onClick={onClick}>
           {/* {id} */}
           <canvas
             className={`${
@@ -104,7 +103,11 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
           />
         </div>
         {!items?.text && !items?.frame && (
-          <div className="flex space-x-4 justify-end mt-2 ">
+          <div
+            className={`flex space-x-4 justify-end mt-2 ${
+              isDragging || isDropping ? `!size-[55%] opacity-90` : ""
+            }`}
+          >
             <Tooltip text="Delete Canvas" placement="bottom">
               <button
                 className="cursor-pointer text-gray-500"

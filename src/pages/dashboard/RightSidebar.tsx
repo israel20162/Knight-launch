@@ -3,16 +3,21 @@ import { useState } from "react";
 import { TextEditor } from "./components/TextEditor";
 import { BackgroundEditor } from "./components/BackgroundEditor";
 import type { Canvas } from "fabric";
+import type { CanvasItem } from "../../types";
 
 interface RightSidebarProps {
   //   addFrame: (imageUrl: string) => void;
   //   addCanvas: () => void;
   //   canvasItems: CanvasItem[];
   selectedCanvas: Canvas | undefined;
+  allCanvases: CanvasItem[];
   //   setSelectedCanvas: (id: string) => void;
 }
 
-export default function RightSidebar({ selectedCanvas }: RightSidebarProps) {
+export default function RightSidebar({
+  selectedCanvas,
+  allCanvases,
+}: RightSidebarProps) {
   const [activeTab, setActiveTab] = useState<"text" | "background">("text");
   return (
     <div className="max-h-screen overflow-x-clip overflow-y-auto no-scrollbar  w-full bg-white ">
@@ -45,7 +50,10 @@ export default function RightSidebar({ selectedCanvas }: RightSidebarProps) {
       <div className=" pb-10">
         <div className="w-full max-w-55 overflow-x-clip p-2 no-scrollbar">
           {activeTab === "background" && (
-            <BackgroundEditor selectedCanvas={selectedCanvas} />
+            <BackgroundEditor
+              allCanvases={allCanvases}
+              selectedCanvas={selectedCanvas}
+            />
           )}
         </div>
         <div className="w-full overflow-x-clip p-2 no-scrollbar">

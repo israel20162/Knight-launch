@@ -60,6 +60,7 @@ export interface DeviceType {
 
 export interface CanvasItem {
   id: string;
+  nid?: number;
   canvas?: Canvas;
 }
 
@@ -76,6 +77,7 @@ export interface CanvasComponentProps {
   bgColor?: string;
   items?: layoutType;
   className?: string;
+  zoom?: number;
   transition: { duration?: number; easing?: string; idle: boolean } | null
   // selectedCanvas?: Canvas | undefined;
 
