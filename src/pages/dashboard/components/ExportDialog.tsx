@@ -8,7 +8,7 @@ import type { CanvasItem } from "../../../types";
 
 // Possible Google Play screenshot presets
 type ScreenshotPreset =
-  | "phone-portrait"
+  | "phone-portrait" 
   | "phone-landscape"
   | "tablet-portrait";
 
