@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Canvas, Gradient, FabricImage, type TFiller } from "fabric";
 import { SegmentedControl } from "@radix-ui/themes";
 import { ChevronDown } from "lucide-react";
@@ -32,17 +32,21 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
 
   useEffect(() => {
     if (!selectedCanvas) return;
-
-    // Only update state if the canvas has changed to avoid resetting
-    const currentBackground = selectedCanvas.backgroundColor;
-    if (currentBackground !== backgroundColor) {
-      setBackgroundColor(currentBackground || "#1a1a1a");
-    }
     if (selectedCanvas.width !== canvasWidth) {
       setCanvasWidth(selectedCanvas.width || 800);
     }
     if (selectedCanvas.height !== canvasHeight) {
       setCanvasHeight(selectedCanvas.height || 600);
+    }
+  },[selectedCanvas]);
+
+  useEffect(() => {
+    if (!selectedCanvas) return;
+
+    // Only update state if the canvas has changed to avoid resetting
+    const currentBackground = selectedCanvas.backgroundColor;
+    if (currentBackground !== backgroundColor) {
+      setBackgroundColor(currentBackground || "#1a1a1a");
     }
 
     const handleSelection = () => {
@@ -62,7 +66,6 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
       selectedCanvas.off("selection:updated", handleSelection);
     };
   }, [selectedCanvas, backgroundColor, canvasWidth, canvasHeight]);
-
 
   if (!selectedCanvas) {
     return (
@@ -115,6 +118,7 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
 
   const resizeCanvas = () => {
     if (selectedCanvas) {
+      // alert(canvasWidth);
       selectedCanvas.setDimensions({
         width: canvasWidth,
         height: canvasHeight,
