@@ -30,7 +30,8 @@ export default function Dashboard() {
   // 🔑 useRef instead of useState
   const canvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1", nid: 1 }]);
   const sortedCanvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1" }]);
-  const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
+  const [_, setCanvasItems] = useState<CanvasItem[]>([]);
+  const [sortedCanvasItems, setSortedCanvasItems] = useState<CanvasItem[]>([]);
 
   var canvasWidth = 360;
   var canvasHeight = 640;
@@ -39,12 +40,16 @@ export default function Dashboard() {
   const [selectedCanvasId, setSelectedCanvasId] = useState<string>("canvas-1");
   const [isDeletable, setIsDeletable] = useState(false);
   const [isTextActive, setIsTextActive] = useState(false);
+  const [canvasToDuplicate, setCanvasToDuplicate] = useState<Canvas | null>(
+    null
+  );
   const selectedCanvas = canvasItemsRef.current.find(
     (item) => item.id === selectedCanvasId
   )?.canvas;
 
   // sync helper
   const syncCanvasState = () => {
+    setSortedCanvasItems([...sortedCanvasItemsRef.current]); // shallow copy forces re-render
     setCanvasItems([...canvasItemsRef.current]); // shallow copy forces re-render
   };
 
@@ -122,6 +127,7 @@ export default function Dashboard() {
 
   // Add a new canvas
   const addNewCanvas = () => {
+    setCanvasToDuplicate(null);
     const numbers = canvasItemsRef.current.map((item) => {
       const match = item.id.match(/canvas-(\d+)/);
       return match ? parseInt(match[1], 10) : 0;
@@ -200,6 +206,43 @@ export default function Dashboard() {
     // Sync state
     syncCanvasState();
   };
+
+  const duplicateCanvas = (id: string) => {
+    const canvasToDuplicate = canvasItemsRef.current.find((c) => c.id === id);
+    if (!canvasToDuplicate || !canvasToDuplicate.canvas) return;
+
+    // Remove any trailing "(number)" from base ID
+    const baseId = id.replace(/\(\d+\)$/, "");
+
+    // Find a unique ID like "canvas-1(1)", "canvas-1(2)", etc.
+    let copyIndex = 1;
+    let newId = `${baseId}(${copyIndex})`;
+
+    const existingIds = canvasItemsRef.current.map((c) => c.id);
+    while (existingIds.includes(newId)) {
+      copyIndex++;
+      newId = `${baseId}(${copyIndex})`;
+    }
+
+    const newItem: CanvasItem = { id: newId };
+
+    // Insert the new item right after the original in the array
+    const originalIndex = canvasItemsRef.current.findIndex((c) => c.id === id);
+
+    const newCanvasItems = [...canvasItemsRef.current];
+    newCanvasItems.splice(originalIndex + 1, 0, newItem); // insert after original
+
+    canvasItemsRef.current = newCanvasItems;
+    sortedCanvasItemsRef.current = [...newCanvasItems];
+
+    setSelectedCanvasId(newId);
+    setCanvasToDuplicate(canvasToDuplicate.canvas);
+
+    setTimeout(() => {
+      syncCanvasState();
+    }, 100);
+  };
+  
 
   const addText = () => {
     if (!selectedCanvas) {
@@ -287,7 +330,7 @@ export default function Dashboard() {
           addFrame={addFrame}
           addCanvas={addNewCanvas}
           selectedCanvas={selectedCanvas}
-          canvasItems={canvasItemsRef.current}
+          canvasItems={sortedCanvasItems}
           setSelectedCanvas={setSelectedCanvasId}
         />
       </aside>
@@ -362,6 +405,7 @@ export default function Dashboard() {
                       sortedCanvasItemsRef.current,
                       event
                     );
+                    syncCanvasState();
                   }}
                 >
                   <div className="!flex flex-1/3 items-center overflow-scroll no-scrollbar">
@@ -372,6 +416,8 @@ export default function Dashboard() {
                         width={canvasWidth}
                         height={canvasHeight}
                         deleteCanvas={deleteCanvas}
+                        duplicateCanvas={canvasToDuplicate ?? undefined}
+                        onDuplicateCanvas={duplicateCanvas}
                         onClick={() => setSelectedCanvasId(item.id)}
                         isActive={item.id === selectedCanvasId}
                         className="p-2"

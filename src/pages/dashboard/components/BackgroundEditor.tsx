@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Canvas, Gradient, FabricImage, type TFiller } from "fabric";
 import { SegmentedControl } from "@radix-ui/themes";
 import { ChevronDown } from "lucide-react";
@@ -38,7 +38,7 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
     if (selectedCanvas.height !== canvasHeight) {
       setCanvasHeight(selectedCanvas.height || 600);
     }
-  },[selectedCanvas]);
+  }, [selectedCanvas]);
 
   useEffect(() => {
     if (!selectedCanvas) return;

@@ -71,6 +71,8 @@ export interface CanvasComponentProps {
   onClick?: () => void;
   deleteCanvas: (id: string) => void
   onCanvasReady: (id: string, canvas: Canvas) => void;
+  onDuplicateCanvas: (id: string) => void;
+  duplicateCanvas?: Canvas ;
   isActive?: boolean;
   width?: number;
   height?: number;
