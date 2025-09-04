@@ -101,7 +101,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     return (
       <div
         className={` p-2  ${className} ${
-          isActive ? "border border-blue-500" : ""
+          isActive ? "border border-blue-500 p-16" : ""
         } `}
         ref={!items?.text && !items?.frame ? ref : fabricCanvasRef}
       >

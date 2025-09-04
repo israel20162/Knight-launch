@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Canvas, Gradient, FabricImage, type TFiller } from "fabric";
 import { SegmentedControl } from "@radix-ui/themes";
-import { ChevronDown } from "lucide-react";
+import { Tooltip } from "../../../components/ui/tooltip";
+import { ChevronDown, X } from "lucide-react";
 import type { CanvasItem } from "../../../types";
 
 interface BackgroundEditorProps {
@@ -13,8 +14,9 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   selectedCanvas,
   allCanvases, // Added prop
 }) => {
+  const defaultBgColor = "#1a1a1a";
   const [backgroundColor, setBackgroundColor] = useState<string | TFiller>(
-    "#1a1a1a"
+    defaultBgColor
   );
   const [backgroundType, setBackgroundType] = useState<
     "solid" | "gradient" | "pattern" | "image"
@@ -220,6 +222,25 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
             <span className="text-sm text-gray-600 font-mono">
               {String(backgroundColor)}
             </span>
+            <Tooltip
+              className={`${
+                defaultBgColor === backgroundColor && "opacity-0 hidden"
+              }`}
+              text="Reset color"
+              placement="bottom"
+            >
+              <button
+                className={`${
+                  defaultBgColor === backgroundColor && "opacity-0 hidden"
+                }`}
+                onClick={() => {
+                  updateCanvasProperty("backgroundColor", defaultBgColor);
+                  setBackgroundColor(defaultBgColor);
+                }}
+              >
+                <X size={12} className="text-red-500 ml-1" />
+              </button>
+            </Tooltip>
           </div>
         </div>
       )}

@@ -25,13 +25,13 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
       alert("You can only add up to 2 frames.");
       return;
     }
-    const text = new IText(items.text.value, {
-      originX: "center",
-      left: selectedCanvas?.getWidth() / 2,
-      top: 1,
-      fontSize: 24,
-      fill: "#FFFFFF",
-    });
+    // const text = new IText(items.text.value, {
+    //   originX: "center",
+    //   left: selectedCanvas?.getWidth() / 2,
+    //   top: 1,
+    //   fontSize: 24,
+    //   fill: "#FFFFFF",
+    // });
     const phoneImg = await FabricImage.fromURL(items.frame.url);
     // Get screen dimensions from the frame image
 
@@ -53,7 +53,7 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
       scaleX: scale,
       scaleY: scale,
       selectable: true,
-      hasControls: false,
+      hasControls: true,
       hasBorders: false,
       lockMovementX: true, // Disables horizontal movement
       lockMovementY: true,
@@ -61,7 +61,7 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
 
     selectedCanvas?.add(phoneImg);
     selectedCanvas.setActiveObject(phoneImg);
-    selectedCanvas?.add(text);
+    // selectedCanvas?.add(text);
   };
 
   // Callback to store the canvas instance when initialized
@@ -84,13 +84,15 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
         <div key={item.id} onClick={() => add(item)} className={`p- `}>
           <CanvasComponent
             height={layoutCanvasHeight}
-            deleteCanvas={() => {}}
+            deleteCanvas={() => { } }
             items={item}
             index={index}
             width={layoutCanvaswidth}
             id={`canvas-${item.id}`}
             onCanvasReady={handleCanvasReady}
-          />
+             onDuplicateCanvas={function (id: string): void {
+              throw new Error("Function not implemented.");
+            } } transition={null}          />
         </div>
       ))}
     </div>

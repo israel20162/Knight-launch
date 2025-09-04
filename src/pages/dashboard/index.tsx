@@ -268,6 +268,7 @@ export default function Dashboard() {
       fill: "#FFFFFF",
     });
     selectedCanvas.add(text);
+    toast.success(`Text added`);
   };
 
   function deleteFrame() {
@@ -346,7 +347,7 @@ export default function Dashboard() {
       keys: ["ctrl", "backspace"],
       handler: () => setConfirmOpen(true),
     },
-    { keys: ["shift"], handler: () => setShiftPressed(true) },
+    { keys: [" "], handler: () => setShiftPressed(true) },
   ]);
 
   useEffect(() => {
@@ -436,7 +437,7 @@ export default function Dashboard() {
           }}
           panning={{
             velocityDisabled: true,
-            disabled: disablePanning || isTextActive,
+            disabled: !disablePanning || isTextActive,
           }}
           initialPositionX={10}
           initialPositionY={50}
@@ -488,6 +489,7 @@ export default function Dashboard() {
                       />
                     ))}
                   </div>
+                 
                 </DragDropProvider>
               </div>
             </div>

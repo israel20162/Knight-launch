@@ -87,7 +87,7 @@ export interface CanvasComponentProps {
 
 export interface layoutType {
   id: number;
-  text: {
+  text?: {
     value: string;
     left?: number;
     top?: number;
