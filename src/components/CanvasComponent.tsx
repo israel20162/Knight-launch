@@ -84,7 +84,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
               lockMovementY: true,
             });
             fabricCanvas.add(phoneImg);
-            // fabricCanvas.setActiveObject(phoneImg);
+            fabricCanvas.setActiveObject(phoneImg);
             fabricCanvas.requestRenderAll();
           }
 
