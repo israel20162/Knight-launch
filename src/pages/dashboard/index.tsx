@@ -436,7 +436,7 @@ export default function Dashboard() {
           }}
           panning={{
             velocityDisabled: true,
-            disabled: disablePanning,
+            disabled: disablePanning || isTextActive,
           }}
           initialPositionX={10}
           initialPositionY={50}
