@@ -120,7 +120,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
               isDragging || isDropping ? `!size-[55%] opacity-90` : ""
             }`}
           >
-            <Tooltip text="Copy Canvas" placement="bottom">
+            <Tooltip text="Duplicate Canvas" placement="bottom">
               <button
                 className="cursor-pointer text-gray-500"
                 onClick={() => onDuplicateCanvas(id)}

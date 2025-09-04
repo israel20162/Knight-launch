@@ -10,17 +10,19 @@ interface TooltipProps {
     | "bottom"
     | "bottom-end"
     | "bottom-start";
+  className?:string
 }
 export const Tooltip = ({
   text,
   children,
   placement = "top",
+  className
 }: TooltipProps) => {
   return (
     <Tippy
       placement={placement}
       content={text}
-      className="bg-black text-white p-2 rounded text-xs"
+      className={`bg-black text-white p-2 rounded text-xs ${className}`}
     >
       {children}
     </Tippy>

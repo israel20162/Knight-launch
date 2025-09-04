@@ -22,6 +22,9 @@ import { Tooltip } from "../../components/ui/tooltip";
 import ExportDialog from "./components/ExportDialog";
 import { countObjectsByType } from "./utils";
 import Logo from "../../components/ui/logo";
+import { useKeyboardShortcuts } from "../../lib/hooks/useKeyboardShortcuts";
+import { toast } from "sonner"; // option
+import { ConfirmDialog } from "../../components/ui/confirmDialog";
 
 export default function Dashboard() {
   const [zoom, setZoom] = useState<number>(0.5);
@@ -35,17 +38,22 @@ export default function Dashboard() {
 
   var canvasWidth = 360;
   var canvasHeight = 640;
-  // Get the currently selected canvas
 
+  // Get the currently selected canvas id
   const [selectedCanvasId, setSelectedCanvasId] = useState<string>("canvas-1");
   const [isDeletable, setIsDeletable] = useState(false);
   const [isTextActive, setIsTextActive] = useState(false);
   const [canvasToDuplicate, setCanvasToDuplicate] = useState<Canvas | null>(
     null
   );
+  // Get the currently selected canvas instance
   const selectedCanvas = canvasItemsRef.current.find(
     (item) => item.id === selectedCanvasId
   )?.canvas;
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [disablePanning, setDisablePanning] = useState(false);
+  const [shiftPressed, setShiftPressed] = useState(false);
 
   // sync helper
   const syncCanvasState = () => {
@@ -113,10 +121,10 @@ export default function Dashboard() {
       scaleY: scale,
       selectable: true,
       hasControls: false,
-      lockScalingX: true,
-      lockScalingY: true,
-      lockMovementX: true,
-      lockMovementY: true,
+      // lockScalingX: true,
+      // lockScalingY: true,
+      // lockMovementX: true,
+      // lockMovementY: true,
       hasBorders: true,
     });
 
@@ -139,6 +147,7 @@ export default function Dashboard() {
     const newItem: CanvasItem = { id: newId };
     canvasItemsRef.current = [...canvasItemsRef.current, newItem];
     sortedCanvasItemsRef.current = [...canvasItemsRef.current];
+    toast.success("New canvas created", { duration: 1000 });
   };
 
   // store the canvas instance when initialized
@@ -205,6 +214,7 @@ export default function Dashboard() {
 
     // Sync state
     syncCanvasState();
+    toast.error(`${id} deleted`,{ duration: 1000 });
   };
 
   const duplicateCanvas = (id: string) => {
@@ -240,9 +250,9 @@ export default function Dashboard() {
 
     setTimeout(() => {
       syncCanvasState();
-    }, 100);
+      toast.success(`${id} duplicated`);
+    }, 500);
   };
-  
 
   const addText = () => {
     if (!selectedCanvas) {
@@ -319,10 +329,55 @@ export default function Dashboard() {
     };
   }, [selectedCanvas]);
 
+  useKeyboardShortcuts([
+    {
+      keys: ["ctrl", "d"],
+      handler: () => duplicateCanvas(selectedCanvasId),
+    },
+    {
+      keys: ["ctrl", "shift", "n"],
+      handler: () => addNewCanvas(),
+    },
+    {
+      keys: ["delete"],
+      handler: () => setConfirmOpen(true),
+    },
+    {
+      keys: ["ctrl", "backspace"],
+      handler: () => setConfirmOpen(true),
+    },
+    { keys: ["shift"], handler: () => setShiftPressed(true) },
+  ]);
+
+  useEffect(() => {
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!e.ctrlKey) setShiftPressed(false);
+    };
+    const handleMouseDown = (e: MouseEvent) => {
+      if (shiftPressed && e.button === 0) {
+        // Shift + Left Mouse Down
+        setDisablePanning(true);
+      }
+    };
+    const handleMouseUp = () => {
+      setDisablePanning(false);
+    };
+
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [shiftPressed]);
+
   return (
-    <div className="flex bg-gray-100">
+    <div className="flex bg-gray-100 min-w-screen min-h-screen max-h-screen overflow-auto">
       {/* Left Sidebar */}
-      <aside className="w-3/12 bg-white border-r p-4 shadow-sm max-h-screen no-scrollbar overflow-scroll">
+      <aside className="w-3/12 bg-white border- p-4 shadow-sm max-h-screen no-scrollbar overflow-scroll">
         <h2 className="text-lg font-bold mb-4">
           <Logo />
         </h2>
@@ -338,7 +393,7 @@ export default function Dashboard() {
       {/* Main Area */}
       <main className="w-9/12 no-scrollbar overflow-x-scroll max-w-full relative">
         {/* Top Toolbar */}
-        <div className="flex items-center w-full bg-white border-b p-2 gap-2 shadow-sm">
+        <div className="flex items-center w-full bg-white border- p-2 gap-2 shadow-sm">
           <header className="flex w-full flex-row space-x-3 items-center">
             {selectedCanvasId}
             <Tooltip text="Add Canvas">
@@ -381,7 +436,7 @@ export default function Dashboard() {
           }}
           panning={{
             velocityDisabled: true,
-            disabled: isTextActive,
+            disabled: disablePanning,
           }}
           initialPositionX={10}
           initialPositionY={50}
@@ -415,7 +470,7 @@ export default function Dashboard() {
                         zoom={zoom}
                         width={canvasWidth}
                         height={canvasHeight}
-                        deleteCanvas={deleteCanvas}
+                        deleteCanvas={() => setConfirmOpen(true)}
                         duplicateCanvas={canvasToDuplicate ?? undefined}
                         onDuplicateCanvas={duplicateCanvas}
                         onClick={() => setSelectedCanvasId(item.id)}
@@ -441,7 +496,7 @@ export default function Dashboard() {
       </main>
 
       {/* Right Sidebar */}
-      <aside className="w-3/12 bg-white border-l p-4 shadow-sm max-h-screen max-w-full no-scrollbar">
+      <aside className="w-3/12 bg-white border- p-4 shadow-sm max-h-screen max-w-full no-scrollbar">
         <div className="mb-4 w-full">
           <ExportDialog sortedCanvasItems={sortedCanvasItemsRef.current} />
         </div>
@@ -450,6 +505,16 @@ export default function Dashboard() {
           selectedCanvas={selectedCanvas}
         />
       </aside>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        message={`Are you sure you want to delete  "${selectedCanvasId}"?`}
+        onConfirm={() => {
+          deleteCanvas(selectedCanvasId);
+          setConfirmOpen(false);
+        }}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }

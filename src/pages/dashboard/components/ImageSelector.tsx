@@ -166,10 +166,10 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       // angle:fa,
       hasControls: false,
       hasBorders:false,
-      lockScalingX: true,
-      lockScalingY: true,
-      lockMovementX: true, // Disables horizontal movement
-      lockMovementY: true,
+      // lockScalingX: true,
+      // lockScalingY: true,
+      // lockMovementX: true, // Disables horizontal movement
+      // lockMovementY: true,
       lockRotation: true,
      
     });

@@ -1,7 +1,8 @@
 import { Canvas, FabricText, type TFiller } from "fabric";
 import { useState, useEffect } from "react";
 import { Button } from "@radix-ui/themes";
-
+import { X } from "lucide-react";
+import { Tooltip } from "../../../components/ui/tooltip";
 interface TextEditorProps {
   selectedCanvas: Canvas | undefined;
 }
@@ -14,10 +15,15 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
   const [fontWeight, setFontWeight] = useState<string>("normal");
   const [lineHeight, setLineHeight] = useState<number>();
   const [strokeColor, setStrokeColor] = useState<string | TFiller>("#000000");
+
+  const defaultBgColor = "#000000";
   const [backgroundColor, setBackgroundColor] = useState<string | TFiller>(
     "#000000"
   );
-  const [textColor, setTextColor] = useState<string | TFiller>("#000000");
+  const defaultTextColor = "#FFFFFF";
+  const [textColor, setTextColor] = useState<string | TFiller>(
+    defaultTextColor
+  );
   const [textAlign, setTextAlign] = useState<string>();
   useEffect(() => {
     const activeObject = selectedCanvas?.getActiveObject();
@@ -257,11 +263,30 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
               setTextColor(e.target.value);
             }}
             disabled={!isActive}
-            className={`w-10 h-10 border rounded ${!isActive && "opacity-50"}`}
+            className={`w-10 h-10  border rounded ${!isActive && "opacity-50"}`}
           />
           <span className={`${!isActive && "opacity-50"}`}>
             {String(textColor)}
           </span>
+          <Tooltip
+            className={`${
+              defaultTextColor === textColor && "opacity-0 hidden"
+            }`}
+            text="Reset color"
+            placement="bottom"
+          >
+            <button
+              className={`${
+                defaultTextColor === textColor && "opacity-0 hidden"
+              }`}
+              onClick={() => {
+                updateTextProperty("fill", defaultTextColor);
+                setTextColor(defaultTextColor);
+              }}
+            >
+              <X size={12} className="text-red-500 ml-1" />
+            </button>
+          </Tooltip>
         </div>
       </div>
       <div className="mb-2">
@@ -286,6 +311,25 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
           <span className={`${!isActive && "opacity-50"}`}>
             {String(backgroundColor)}
           </span>
+          <Tooltip
+            className={`${
+              defaultBgColor === backgroundColor && "opacity-0 hidden"
+            }`}
+            text="Reset color"
+            placement="bottom"
+          >
+            <button
+              className={`${
+                defaultBgColor === backgroundColor && "opacity-0 hidden"
+              }`}
+              onClick={() => {
+                updateTextProperty("backgroundColor", defaultBgColor);
+                setBackgroundColor(defaultBgColor);
+              }}
+            >
+              <X size={12} className="text-red-500 ml-1" />
+            </button>
+          </Tooltip>
         </div>
       </div>
       <div className="mb-2">
