@@ -86,7 +86,7 @@ export const devices: DeviceType[] = [
         name: "Iphone 14 black",
         type: "iphone",
         category: "Phone",
-        width: 890,
+        width: 900,
         height: 1890,
         rx: 95,
         ry: 95,

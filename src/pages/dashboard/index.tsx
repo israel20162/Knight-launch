@@ -36,8 +36,8 @@ export default function Dashboard() {
   const [_, setCanvasItems] = useState<CanvasItem[]>([]);
   const [sortedCanvasItems, setSortedCanvasItems] = useState<CanvasItem[]>([]);
 
-  var canvasWidth = 360;
-  var canvasHeight = 640;
+  var canvasWidth = 450
+  var canvasHeight = 800;
 
   // Get the currently selected canvas id
   const [selectedCanvasId, setSelectedCanvasId] = useState<string>("canvas-1");
@@ -109,8 +109,8 @@ export default function Dashboard() {
     // alert(phoneImg.width)
 
     const fitScale = Math.min(
-      selectedCanvas.width! / phoneImg.width/0.9!,
-      selectedCanvas.height! / phoneImg.height/0.9!
+      selectedCanvas.width! / phoneImg.width / 0.9!,
+      selectedCanvas.height! / phoneImg.height / 0.9!
     );
     const scale = fitScale * 0.75;
     phoneImg.set({
@@ -215,7 +215,7 @@ export default function Dashboard() {
 
     // Sync state
     syncCanvasState();
-    toast.error(`${id} deleted`,{ duration: 1000 });
+    toast.error(`${id} deleted`, { duration: 1000 });
   };
 
   const duplicateCanvas = (id: string) => {
@@ -337,7 +337,7 @@ export default function Dashboard() {
       handler: () => duplicateCanvas(selectedCanvasId),
     },
     {
-      keys: ["ctrl", "shift", "n"],
+      keys: ["ctrl", "+","="],
       handler: () => addNewCanvas(),
     },
     {
@@ -389,6 +389,7 @@ export default function Dashboard() {
           selectedCanvas={selectedCanvas}
           canvasItems={sortedCanvasItems}
           setSelectedCanvas={setSelectedCanvasId}
+          selectedCanvasId={selectedCanvasId}
         />
       </aside>
 
@@ -490,7 +491,6 @@ export default function Dashboard() {
                       />
                     ))}
                   </div>
-                 
                 </DragDropProvider>
               </div>
             </div>
@@ -499,7 +499,7 @@ export default function Dashboard() {
       </main>
 
       {/* Right Sidebar */}
-      <aside className="w-3/12 bg-white border- p-4 shadow-sm max-h-screen max-w-full no-scrollbar">
+      <aside className="w-3/12 bg-white border- py-4 px-2  shadow-sm overflow-scroll max-h-screen max-w-full no-scrollbar">
         <div className="mb-4 w-full">
           <ExportDialog sortedCanvasItems={sortedCanvasItemsRef.current} />
         </div>

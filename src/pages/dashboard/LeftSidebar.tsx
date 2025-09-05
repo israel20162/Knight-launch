@@ -11,6 +11,7 @@ interface LeftSidebarProps {
   addCanvas: () => void;
   canvasItems: CanvasItem[];
   selectedCanvas: Canvas | undefined;
+  selectedCanvasId: string;
   setSelectedCanvas: (id: string) => void;
 }
 
@@ -20,6 +21,7 @@ export default function LeftSidebar({
   canvasItems,
   selectedCanvas,
   setSelectedCanvas,
+  selectedCanvasId,
 }: LeftSidebarProps) {
   const [activeTab, setActiveTab] = useState<"editor" | "assets">("editor");
   const [openAccordion, setOpenAccordion] = useState<string | null>("devices");
@@ -131,7 +133,10 @@ export default function LeftSidebar({
         )}
 
         {activeTab === "assets" && (
-          <ImageSelector selectedCanvas={selectedCanvas} />
+          <ImageSelector
+            selectedCanvasId={selectedCanvasId}
+            selectedCanvas={selectedCanvas}
+          />
         )}
       </div>
     </div>

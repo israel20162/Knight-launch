@@ -1,4 +1,4 @@
-import { Canvas, FabricImage, FabricText, Rect } from "fabric";
+import { Canvas, FabricImage, FabricText, Rect, Group } from "fabric";
 import React, { useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { ArrowLeftRight, Copy, Trash2 } from "lucide-react";
@@ -31,7 +31,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     });
     useEffect(() => {
       if (canvasRef.current) {
-        const json = duplicateCanvas?.toJSON();
+        // const json = duplicateCanvas?.toJSON();
 
         const fabricCanvas = new Canvas(canvasRef.current, {
           width: duplicateCanvas?.width || width || 222.5,
@@ -52,13 +52,13 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
           fabricCanvas.set("backgroundImage", duplicatedBgImage);
           fabricCanvas.requestRenderAll();
         }
-        // Clone everything EXCEPT the clipRect
         duplicateCanvas?.getObjects().forEach(async (obj) => {
           // Skip if it's the clipRect
           if (obj instanceof Rect) return;
 
           // Clone everything else
           fabricCanvas.add(await obj.clone());
+          fabricCanvas.requestRenderAll();
         });
 
         if (items?.text) {
@@ -110,6 +110,92 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
         };
       }
     }, [id, onCanvasReady, width, height]);
+
+    // async function cloneCanvasWithNewFrame(
+    //   sourceCanvas: Canvas,
+    //   newFrameURL: string,
+    //   device: { width: number; height: number; rx?: number; ry?: number }
+    // ): Promise<any>{
+    //  if(canvasRef.current){
+    //   const newCanvas = new Canvas(canvasRef.current, {
+    //     width: sourceCanvas.width,
+    //     height: sourceCanvas.height,
+    //     preserveObjectStacking: true,
+    //     backgroundColor: sourceCanvas.backgroundColor,
+    //   });
+
+    //   const group = sourceCanvas
+    //     .getObjects()
+    //     .find((obj) => obj.type === "group") as Group;
+    //   if (!group) throw new Error("No frame group found in source canvas.");
+
+    //   const innerImg = group._objects.find(
+    //     (o) => o instanceof FabricImage
+    //   ) as FabricImage;
+    //   if (!innerImg) throw new Error("No inner image found.");
+
+    //   const clonedInnerImg = await innerImg.clone();
+    //   const newFrame = await FabricImage.fromURL(newFrameURL);
+
+    //   const fitScale = Math.min(
+    //     newCanvas.width! / newFrame.width!,
+    //     newCanvas.height! / newFrame.height!
+    //   );
+    //   newFrame.set({
+    //     originX: "center",
+    //     originY: "center",
+    //     left: newCanvas.width! / 2,
+    //     top: newCanvas.height! / 2,
+    //     scaleX: fitScale * 0.75,
+    //     scaleY: fitScale * 0.75,
+    //     selectable: true,
+    //     hasControls: true,
+    //     hasBorders: false,
+    //   });
+
+    //   const scale = Math.min(
+    //     (device.width * (newFrame.scaleX || 1)) / (clonedInnerImg.width || 1),
+    //     (device.height * (newFrame.scaleY || 1)) / (clonedInnerImg.height || 1)
+    //   );
+
+    //   clonedInnerImg.set({
+    //     originX: "center",
+    //     originY: "center",
+    //     scaleX: scale * 1.025,
+    //     scaleY: scale * 1.015,
+    //     left: newFrame.left,
+    //     top: newFrame.top,
+    //     selectable: false,
+    //     absolutePositioned: true,
+    //     clipPath: new Rect({
+    //       originX: "center",
+    //       originY: "center",
+    //       width: clonedInnerImg.width! - 10,
+    //       height: clonedInnerImg.height! - 10,
+    //       rx: device.rx || 0,
+    //       ry: device.ry || 0,
+    //       left: newFrame.left,
+    //       top: newFrame.top,
+    //     }),
+    //   });
+
+    //   const newGroup = new Group([clonedInnerImg, newFrame], {
+    //     originX: "center",
+    //     originY: "center",
+    //     left: newCanvas.width! / 2,
+    //     top: newCanvas.height! / 2,
+    //   });
+
+    //   newCanvas.add(newGroup);
+    //   newCanvas.setActiveObject(newGroup);
+    //   newCanvas.requestRenderAll();
+
+    //   return newCanvas;
+    //  }
+    // }
+
+    
+    
 
     return (
       <div

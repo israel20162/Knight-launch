@@ -4,10 +4,12 @@ import { X } from "lucide-react";
 import { useAppContext } from "../../../context/AppContext";
 import { Upload } from "lucide-react";
 interface ImageSelectorProps {
+  selectedCanvasId: string;
   selectedCanvas: Canvas | undefined;
 }
 export const ImageSelector: React.FC<ImageSelectorProps> = ({
   selectedCanvas,
+  selectedCanvasId,
 }) => {
   const [images, setImages] = useState<string[]>([]);
 
@@ -15,7 +17,7 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
 
   // Load images from localStorage on component mount
   useEffect(() => {
-    console.log(device);
+    // console.log(device);
     const storedImages = localStorage.getItem("storedImages");
     if (storedImages) {
       try {
@@ -90,12 +92,13 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       return;
     }
     const frame = selectedCanvas.getActiveObject();
-   
+
     if (!frame || !(frame instanceof FabricImage)) {
       alert("Please select a phone frame image first.");
       return;
     }
     const upscaledImageURL = await upscaleImage(imageURL);
+    console.log(upscaledImageURL, selectedCanvasId);
     const innerImg = await FabricImage.fromURL(upscaledImageURL, {
       crossOrigin: "anonymous",
     });
@@ -138,23 +141,22 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
     const clipRect = new Rect({
       originX: "center",
       originY: "center",
-      width: innerImg.width-10,
-      height: innerImg.height-10,
+      width: innerImg.width,
+      height: innerImg.height,
       // scaleX: innerImg.scaleX,
       // scaleY: innerImg.scaleY,
-      angle: frame.angle,
+      // angle: frame.angle,
       absolutePositioned: true,
-      rx: device.rx || 0,
-      ry: device.ry || 0,
-      left: frame.left,
+      rx: device.rx ,
+      ry: device.ry ,
+      left: innerImg.left,
       top: frame.top,
     });
     innerImg.clipPath = clipRect;
 
-   
     const clonedFrame = await frame.clone();
     selectedCanvas.remove(frame);
-    const group = new Group([innerImg, clonedFrame,], {
+    const group = new Group([innerImg, clonedFrame], {
       originX: "center",
       originY: "center",
       left: frame.left,
@@ -163,13 +165,12 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       // angle: frame.angle,
       // angle:fa,
       hasControls: true,
-      hasBorders:false,
+      hasBorders: false,
       // lockScalingX: true,
       // lockScalingY: true,
       // lockMovementX: true, // Disables horizontal movement
       // lockMovementY: true,
       // lockRotation: true,
-     
     });
     // selectedCanvas.sendObjectToBack(innerImg);
     selectedCanvas.add(group);
@@ -254,12 +255,7 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
   return (
     <div className="flex flex-col items-center justify-center">
       {/* <h1 className=" font-bold mb-4">Image Uploader</h1> */}
-      {/* <input
-        type="file"
-        accept="image/*"
-        onChange={handleImageUpload}
-        className="mb-4 p-2 border border-gray-300 rounded"
-      /> */}
+
       <ImageUploadInput />
       <div className="grid grid-cols-2  gap-4">
         {images.map((src, index) => (

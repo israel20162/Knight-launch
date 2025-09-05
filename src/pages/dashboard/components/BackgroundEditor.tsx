@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Canvas, Gradient, FabricImage, type TFiller } from "fabric";
+import { Canvas, Gradient, FabricImage, type TFiller, Color } from "fabric";
 import { SegmentedControl } from "@radix-ui/themes";
 import { Tooltip } from "../../../components/ui/tooltip";
 import { ChevronDown, X } from "lucide-react";
@@ -12,17 +12,19 @@ interface BackgroundEditorProps {
 
 export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   selectedCanvas,
-  allCanvases, // Added prop
+  allCanvases,
 }) => {
   const defaultBgColor = "#1a1a1a";
   const [backgroundColor, setBackgroundColor] = useState<string | TFiller>(
     defaultBgColor
   );
+  const [backgroundOpacity, setBackgroundOpacity] = useState(1); // 1 = fully visible, 0 = transparent
   const [backgroundType, setBackgroundType] = useState<
     "solid" | "gradient" | "pattern" | "image"
   >("solid");
   const [gradientColor1, setGradientColor1] = useState("#1a1a1a");
   const [gradientColor2, setGradientColor2] = useState("#4a4a4a");
+  const [appliedGradient, setAppliedGradient] = useState<string | null>(null);
   const [gradientDirection, setGradientDirection] = useState<
     "horizontal" | "vertical" | "diagonal"
   >("vertical");
@@ -31,6 +33,20 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   const [openAccordion, toggleAccordion] = useState<"size" | "presets" | null>(
     null
   );
+
+  const [bgPosX, setBgPosX] = useState(0);
+  const [bgPosY, setBgPosY] = useState(0);
+  const [backgroundPosition, setBackgroundPosition] = useState<
+    | "top-left"
+    | "top-center"
+    | "top-right"
+    | "center-left"
+    | "center"
+    | "center-right"
+    | "bottom-left"
+    | "bottom-center"
+    | "bottom-right"
+  >("center");
 
   useEffect(() => {
     if (!selectedCanvas) return;
@@ -116,8 +132,41 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
 
     selectedCanvas.set("backgroundColor", gradient);
     selectedCanvas.renderAll();
+    // store css preview
+    const dir =
+      gradientDirection === "horizontal"
+        ? "to right"
+        : gradientDirection === "vertical"
+        ? "to bottom"
+        : "to bottom right";
+    setAppliedGradient(
+      `linear-gradient(${dir}, ${gradientColor1}, ${gradientColor2})`
+    );
   };
 
+  const applyBackgroundOpacity = (opacity: number) => {
+    if (!selectedCanvas) return;
+
+    if (selectedCanvas.backgroundImage) {
+      selectedCanvas.backgroundImage.set("opacity", opacity);
+    } else if (
+      selectedCanvas.backgroundColor &&
+      typeof selectedCanvas.backgroundColor !== "string"
+    ) {
+      // Gradient backgroundColor (fabric.Gradient) doesn’t support opacity directly.
+      // Workaround: wrap in object with opacity
+      (selectedCanvas.backgroundColor as any).opacity = opacity;
+    } else {
+      // Solid color background
+      selectedCanvas.set(
+        "backgroundColor",
+        new Color(String(backgroundColor)).setAlpha(opacity)
+      );
+    }
+
+    selectedCanvas.renderAll();
+  };
+  
   const resizeCanvas = () => {
     if (selectedCanvas) {
       // alert(canvasWidth);
@@ -127,6 +176,62 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
       });
       selectedCanvas.renderAll();
     }
+  };
+  const applyBackgroundPosition = (position: typeof backgroundPosition) => {
+    if (!selectedCanvas || !selectedCanvas.backgroundImage) return;
+
+    const img = selectedCanvas.backgroundImage;
+    const canvasW = selectedCanvas.width || 0;
+    const canvasH = selectedCanvas.height || 0;
+    const imgW = img.width! * img.scaleX!;
+    const imgH = img.height! * img.scaleY!;
+
+    let left = 0;
+    let top = 0;
+
+    switch (position) {
+      case "top-left":
+        left = 0;
+        top = 0;
+        break;
+      case "top-center":
+        left = (canvasW - imgW) / 2;
+        top = 0;
+        break;
+      case "top-right":
+        left = canvasW - imgW;
+        top = 0;
+        break;
+      case "center-left":
+        left = 0;
+        top = (canvasH - imgH) / 2;
+        break;
+      case "center":
+        left = (canvasW - imgW) / 2;
+        top = (canvasH - imgH) / 2;
+        break;
+      case "center-right":
+        left = canvasW - imgW;
+        top = (canvasH - imgH) / 2;
+        break;
+      case "bottom-left":
+        left = 0;
+        top = canvasH - imgH;
+        break;
+      case "bottom-center":
+        left = (canvasW - imgW) / 2;
+        top = canvasH - imgH;
+        break;
+      case "bottom-right":
+        left = canvasW - imgW;
+        top = canvasH - imgH;
+        break;
+    }
+
+    img.set({ left, top });
+    setBgPosX(Math.floor(left));
+    setBgPosY(top);
+    selectedCanvas.renderAll();
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,6 +247,10 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
             const fabricImg = new FabricImage(img, {
               scaleX: selectedCanvas.width / img.width,
               scaleY: selectedCanvas.height / img.height,
+              left: Number(bgPosX),
+              top: Number(bgPosX),
+              originX: "left",
+              originY: "top",
             });
             selectedCanvas.set("backgroundImage", fabricImg);
             selectedCanvas.renderAll();
@@ -181,12 +290,12 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   };
 
   return (
-    <>
+    <div className="w-full  flex flex-col overflow-y-scroll no-scrollbar">
       <h2 className="text-lg font-bold mb-2 mt-4">Edit Background</h2>
 
       {/* Background Type Selector */}
       <div className="mb-4 flex justify-center">
-        <div className="flex">
+        <div className="inline-flex">
           {["solid", "gradient", "image"].map((type) => (
             <button
               key={type}
@@ -289,12 +398,43 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
               <option value="diagonal">Diagonal</option>
             </select>
           </div>
-          <button
-            onClick={applyGradient}
-            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-colors"
-          >
-            Apply Gradient
-          </button>
+          {appliedGradient && (
+            <div className="flex items-center gap-3">
+              <div
+                className="w-12 h-12 rounded border"
+                style={{ background: appliedGradient }}
+              />
+              <span className="text-xs text-gray-600 font-mono">
+                {gradientColor1} → {gradientColor2}
+              </span>
+            </div>
+          )}
+
+          <div className="w-full flex flex-row-reverse gap-2 justify-evenly">
+            <button
+              onClick={applyGradient}
+              className="w-1/2 text-xs bg-blue-500 text-white py-2  rounded hover:bg-blue-600 transition-colors"
+            >
+              Apply Gradient
+            </button>
+            <button
+              onClick={() => {
+                if (selectedCanvas) {
+                  selectedCanvas.set("backgroundColor", defaultBgColor);
+                  setAppliedGradient(
+                    `linear-gradient(to left, #1a1a1a, #1a1a1a)`
+                  );
+                  setGradientColor1(defaultBgColor);
+                  setGradientColor2(defaultBgColor);
+                  selectedCanvas.renderAll();
+                  setBackgroundColor(defaultBgColor);
+                }
+              }}
+              className="w-1/2 text-xs flex-1 bg-red-500 text-white py-2 rounded hover:bg-red-600 transition-colors"
+            >
+              Clear Gradient
+            </button>
+          </div>
         </div>
       )}
 
@@ -417,11 +557,100 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
               </SegmentedControl.Item>
             ))}
           </SegmentedControl.Root>
+          <div className="mt-4">
+            <label className="block text-xs text-gray-500 mb-2">
+              Background Position
+            </label>
+            <select
+              value={backgroundPosition}
+              onChange={(e) => {
+                const pos = e.target.value as typeof backgroundPosition;
+                setBackgroundPosition(pos);
+                applyBackgroundPosition(pos);
+              }}
+              className="w-full p-2 border rounded text-sm"
+            >
+              <option value="top-left">Top Left</option>
+              <option value="top-center">Top Center</option>
+              <option value="top-right">Top Right</option>
+              <option value="center-left">Center Left</option>
+              <option value="center">Center</option>
+              <option value="center-right">Center Right</option>
+              <option value="bottom-left">Bottom Left</option>
+              <option value="bottom-center">Bottom Center</option>
+              <option value="bottom-right">Bottom Right</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                X Position
+              </label>
+              <input
+                type="number"
+                step={1}
+                value={bgPosX}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setBgPosX(val);
+                  if (selectedCanvas?.backgroundImage) {
+                    selectedCanvas.backgroundImage.set({ left: val });
+                    selectedCanvas.renderAll();
+                  }
+                }}
+                className="w-full p-2 border rounded text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Y Position
+              </label>
+              <input
+                type="number"
+                step={1}
+                value={bgPosY}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setBgPosY(val);
+                  if (selectedCanvas?.backgroundImage) {
+                    selectedCanvas.backgroundImage.set({ top: val });
+                    selectedCanvas.renderAll();
+                  }
+                }}
+                className="w-full p-2 border rounded text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-xs text-gray-500 mb-2">
+              Background Opacity ({Math.round(backgroundOpacity * 100)}%)
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={backgroundOpacity}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setBackgroundOpacity(val);
+                applyBackgroundOpacity(val);
+              }}
+              className="w-full"
+            />
+          </div>
+
           <button
             onClick={async () => {
               if (selectedCanvas) {
                 selectedCanvas.set("backgroundImage", null);
                 selectedCanvas.requestRenderAll();
+                setBgPosX(0);
+                setBgPosY(0);
+                setBackgroundOpacity(1);
+                setBackgroundPosition("center");
               }
             }}
             className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition-colors"
@@ -535,6 +764,6 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
           )}
         </div>
       </section>
-    </>
+    </div>
   );
 };

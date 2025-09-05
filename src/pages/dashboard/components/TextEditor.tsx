@@ -9,7 +9,7 @@ interface TextEditorProps {
 export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
   const [selectedText, setSelectedText] = useState<FabricText | null>(null);
   const [isActive, setIsActive] = useState<boolean>(false);
-  const [fontSize, setFontSize] = useState<number>();
+  const [fontSize, setFontSize] = useState<number>(24);
   const [selText, setSelText] = useState<string>();
   const [fontFamily, setFontFamily] = useState<string>();
   const [fontWeight, setFontWeight] = useState<string>("normal");
@@ -86,7 +86,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
     selectedCanvas.renderAll();
   };
   return (
-    <div className="w-full mx-auto mb-12 flex flex-col ">
+    <div className="w-full mx-auto flex flex-col overflow-y-scroll no-scrollbar">
       <h2 className="text-lg font-bold mb-2">Edit Text </h2>
 
       <div className="mb-2">
