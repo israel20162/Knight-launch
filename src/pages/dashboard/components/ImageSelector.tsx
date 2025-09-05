@@ -96,7 +96,6 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       return;
     }
     const upscaledImageURL = await upscaleImage(imageURL);
-    console.log(device);
     const innerImg = await FabricImage.fromURL(upscaledImageURL, {
       crossOrigin: "anonymous",
     });
@@ -123,7 +122,6 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
         );
         break;
     }
-    console.log(scale);
 
     innerImg.set({
       originX: "center",
@@ -140,10 +138,10 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
     const clipRect = new Rect({
       originX: "center",
       originY: "center",
-      width: innerImg.width,
-      height: innerImg.height,
-      scaleX: innerImg.scaleX,
-      scaleY: innerImg.scaleY,
+      width: innerImg.width-10,
+      height: innerImg.height-10,
+      // scaleX: innerImg.scaleX,
+      // scaleY: innerImg.scaleY,
       angle: frame.angle,
       absolutePositioned: true,
       rx: device.rx || 0,
@@ -164,19 +162,17 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       selectable: true,
       // angle: frame.angle,
       // angle:fa,
-      hasControls: false,
+      hasControls: true,
       hasBorders:false,
       // lockScalingX: true,
       // lockScalingY: true,
       // lockMovementX: true, // Disables horizontal movement
       // lockMovementY: true,
-      lockRotation: true,
+      // lockRotation: true,
      
     });
     // selectedCanvas.sendObjectToBack(innerImg);
     selectedCanvas.add(group);
-    
-
     selectedCanvas.setActiveObject(group);
     selectedCanvas.requestRenderAll();
   }
@@ -257,7 +253,7 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
 
   return (
     <div className="flex flex-col items-center justify-center">
-      {/* <h1 className="text-2xl font-bold mb-4">Image Uploader</h1> */}
+      {/* <h1 className=" font-bold mb-4">Image Uploader</h1> */}
       {/* <input
         type="file"
         accept="image/*"

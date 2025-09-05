@@ -1,4 +1,4 @@
-import { Canvas, FabricImage, FabricText } from "fabric";
+import { Canvas, FabricImage, FabricText, Rect } from "fabric";
 import React, { useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { ArrowLeftRight, Copy, Trash2 } from "lucide-react";
@@ -31,11 +31,19 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     });
     useEffect(() => {
       if (canvasRef.current) {
+        const json = duplicateCanvas?.toJSON();
+
         const fabricCanvas = new Canvas(canvasRef.current, {
           width: duplicateCanvas?.width || width || 222.5,
           height: duplicateCanvas?.height || height || 400,
           preserveObjectStacking: true,
         });
+        // fabricCanvas.loadFromJSON(json,()=>{
+        //   fabricCanvas.renderAll();
+        // });
+
+        // If you want to copy background color and image from duplicateCanvas
+        // Uncomment the following lines
         fabricCanvas.backgroundColor =
           duplicateCanvas?.backgroundColor || bgColor || "#1a1a1b";
         if (duplicateCanvas?.backgroundImage) {
@@ -44,7 +52,12 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
           fabricCanvas.set("backgroundImage", duplicatedBgImage);
           fabricCanvas.requestRenderAll();
         }
+        // Clone everything EXCEPT the clipRect
         duplicateCanvas?.getObjects().forEach(async (obj) => {
+          // Skip if it's the clipRect
+          if (obj instanceof Rect) return;
+
+          // Clone everything else
           fabricCanvas.add(await obj.clone());
         });
 
@@ -84,7 +97,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
               lockMovementY: true,
             });
             fabricCanvas.add(phoneImg);
-            fabricCanvas.setActiveObject(phoneImg);
+            // fabricCanvas.setActiveObject(phoneImg);
             fabricCanvas.requestRenderAll();
           }
 
@@ -101,7 +114,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     return (
       <div
         className={` p-2  ${className} ${
-          isActive ? "border border-blue-500 p-16" : ""
+          isActive ? "border border-blue-500 p-4" : ""
         } `}
         ref={!items?.text && !items?.frame ? ref : fabricCanvasRef}
       >

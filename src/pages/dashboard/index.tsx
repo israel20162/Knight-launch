@@ -106,10 +106,11 @@ export default function Dashboard() {
     }
 
     const phoneImg = await FabricImage.fromURL(phoneImageURL);
+    // alert(phoneImg.width)
 
     const fitScale = Math.min(
-      selectedCanvas.width! / phoneImg.width!,
-      selectedCanvas.height! / phoneImg.height!
+      selectedCanvas.width! / phoneImg.width/0.9!,
+      selectedCanvas.height! / phoneImg.height/0.9!
     );
     const scale = fitScale * 0.75;
     phoneImg.set({
@@ -120,7 +121,7 @@ export default function Dashboard() {
       scaleX: scale,
       scaleY: scale,
       selectable: true,
-      hasControls: false,
+      hasControls: true,
       // lockScalingX: true,
       // lockScalingY: true,
       // lockMovementX: true,
@@ -464,7 +465,7 @@ export default function Dashboard() {
                     syncCanvasState();
                   }}
                 >
-                  <div className="!flex flex-1/3 items-center overflow-scroll no-scrollbar">
+                  <div className="!flex flex-1/3 gap-16 items-center overflow-scroll no-scrollbar">
                     {canvasItemsRef.current.map((item, index) => (
                       <CanvasComponent
                         key={item.id}

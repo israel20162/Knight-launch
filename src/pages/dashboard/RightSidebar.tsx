@@ -1,4 +1,4 @@
-import { Layout, ImageIcon } from "lucide-react";
+import { ImageIcon, LetterText } from "lucide-react";
 import { useState } from "react";
 import { TextEditor } from "./components/TextEditor";
 import { BackgroundEditor } from "./components/BackgroundEditor";
@@ -6,12 +6,8 @@ import type { Canvas } from "fabric";
 import type { CanvasItem } from "../../types";
 
 interface RightSidebarProps {
-  //   addFrame: (imageUrl: string) => void;
-  //   addCanvas: () => void;
-  //   canvasItems: CanvasItem[];
   selectedCanvas: Canvas | undefined;
   allCanvases: CanvasItem[];
-  //   setSelectedCanvas: (id: string) => void;
 }
 
 export default function RightSidebar({
@@ -31,7 +27,7 @@ export default function RightSidebar({
               : "border-transparent text-gray-500 hover:text-blue-600"
           }`}
         >
-          <Layout className="inline-block w-4 h-4 mr-1" />
+          <LetterText className="inline-block w-4 h-4 mr-1" />
           Text
         </button>
         <button
