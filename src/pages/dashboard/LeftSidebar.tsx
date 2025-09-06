@@ -31,9 +31,9 @@ export default function LeftSidebar({
   };
 
   return (
-    <div className="max-h-screen overflow-y-auto no-scrollbar w-full bg-white">
+    <div className="max-h-screen w-full overflow-y-auto no-scrollbar bg-white">
       {/* Tabs */}
-      <div className="flex w-full">
+      <div className="flex">
         <button
           onClick={() => setActiveTab("editor")}
           className={`flex-1 px-4 py-2 text-sm font-medium border-b-2 ${

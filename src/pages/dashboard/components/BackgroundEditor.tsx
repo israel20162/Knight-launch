@@ -290,7 +290,7 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   };
 
   return (
-    <div className="w-full  flex flex-col overflow-y-scroll no-scrollbar">
+    <div className="w-full no-scrollbar flex flex-col overflow-y-scroll no-scrollbar">
       <h2 className="text-lg font-bold mb-2 mt-4">Edit Background</h2>
 
       {/* Background Type Selector */}

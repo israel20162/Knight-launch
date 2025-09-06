@@ -16,7 +16,7 @@ export default function RightSidebar({
 }: RightSidebarProps) {
   const [activeTab, setActiveTab] = useState<"text" | "background">("text");
   return (
-    <div className=" max-h-screen overflow-y-auto no-scrollbar w-full bg-white">
+    <div className=" max-h-screen w-auto overflow-y-scroll no-scrollbar  bg-white">
       {/* Tabs */}
       <div className="flex w-full">
         <button

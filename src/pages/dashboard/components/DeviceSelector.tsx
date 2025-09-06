@@ -12,7 +12,7 @@ export const DeviceSelector = ({
   onDeviceSelect,
 }: //   selectedDevice,
 DeviceSelectorProps) => {
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [openCategory, setOpenCategory] = useState<string | null>("Phon");
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>(devices[0]);
   // saves current device to global context
   const { updateDevice } = useAppContext();
@@ -26,8 +26,8 @@ DeviceSelectorProps) => {
     return () => {};
   }, [selectedDevice]);
   return (
-    <div className="p-1 no-scrollbar">
-      <div className="space-y-3">
+    <div className="no-scrollbar min-w-full">
+      <div className="space-y-3 ">
         {categories.map((category) => (
           <div key={category} className=" border border-gray-200 rounded">
             <button

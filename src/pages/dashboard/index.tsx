@@ -5,7 +5,15 @@ import {
   type WheelEvent,
   useCallback,
 } from "react";
-import { ZoomIn, ZoomOut, Plus, Trash2, Type } from "lucide-react";
+import {
+  ZoomIn,
+  ZoomOut,
+  Plus,
+  Trash2,
+  Type,
+  Menu,
+  PanelRightClose,
+} from "lucide-react";
 import LeftSidebar from "./LeftSidebar";
 import { Canvas, FabricImage, IText, Group } from "fabric";
 import {
@@ -31,9 +39,9 @@ export default function Dashboard() {
   const canvasAreaRef = useRef<HTMLDivElement | null>(null);
 
   // 🔑 useRef instead of useState
-  const canvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1", nid: 1 }]);
+  const canvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1" }]);
   const sortedCanvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1" }]);
-  const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
+  const [_, setCanvasItems] = useState<CanvasItem[]>([]);
   const [sortedCanvasItems, setSortedCanvasItems] = useState<CanvasItem[]>([]);
 
   var canvasWidth = 450;
@@ -55,6 +63,9 @@ export default function Dashboard() {
   const [disablePanning, setDisablePanning] = useState(false);
   const [shiftPressed, setShiftPressed] = useState(false);
 
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(false);
+
   // sync helper
   const syncCanvasState = () => {
     setSortedCanvasItems([...sortedCanvasItemsRef.current]); // shallow copy forces re-render
@@ -70,7 +81,7 @@ export default function Dashboard() {
     const { zoomIn, zoomOut } = useControls();
 
     return (
-      <div className="absolute top-2 right-4 z-50 space-x-2 flex items-center">
+      <div className="absolute top-2 right-4 z-40 space-x-2 flex items-center">
         <button onClick={() => zoomOut(0.35)} className="p-2 rounded">
           <ZoomOut />
         </button>
@@ -269,6 +280,8 @@ export default function Dashboard() {
       fill: "#FFFFFF",
     });
     selectedCanvas.add(text);
+    selectedCanvas.setActiveObject(text);
+    selectedCanvas.requestRenderAll();
     toast.success(`Text added`);
   };
 
@@ -377,59 +390,66 @@ export default function Dashboard() {
   }, [shiftPressed]);
 
   // Save all canvases into a single JSON object
-  const saveProject = (allCanvases: CanvasItem[]) => {
-    const projectData = allCanvases.map((canvasItem) => ({
-      id: canvasItem.id,
-      data: canvasItem.canvas?.toJSON(), // FabricJS export
-    }));
+  // const saveProject = (allCanvases: CanvasItem[]) => {
+  //   const projectData = allCanvases.map((canvasItem) => ({
+  //     id: canvasItem.id,
+  //     data: canvasItem.canvas?.toJSON(), // FabricJS export
+  //   }));
 
-    // Example: save to localStorage
-    localStorage.setItem("myProject", JSON.stringify(projectData));
-    localStorage.setItem("canvases", JSON.stringify(canvasItemsRef.current));
-    localStorage.setItem("lastSaved", new Date().toISOString());
-    toast.success("Project saved!", { duration: 1000 });
+  //   // Example: save to localStorage
+  //   localStorage.setItem("myProject", JSON.stringify(projectData));
+  //   localStorage.setItem("canvases", JSON.stringify(canvasItemsRef.current));
+  //   localStorage.setItem("lastSaved", new Date().toISOString());
+  //   toast.success("Project saved!", { duration: 1000 });
 
-    // Or send projectData to your backend DB via API
-    return projectData;
-  };
+  //   // Or send projectData to your backend DB via API
+  //   return projectData;
+  // };
 
-  const loadProject = (
-    savedData: { id: string; data: any }[],
-    allCanvases: CanvasItem[]
-  ) => {
-    savedData.forEach((savedCanvas) => {
-      const canvasItem = allCanvases.find((c) => c.id === savedCanvas.id);
-      console.log(canvasItem?.canvas);
-      if (canvasItem && canvasItem.canvas) {
-        canvasItem.canvas.loadFromJSON(savedCanvas.data, () => {
-          canvasItem?.canvas?.requestRenderAll();
-        });
-        // canvasItem.canvas.loadFromJSON(savedCanvas.data, () => {
+  // const loadProject = (
+  //   savedData: { id: string; data: any }[],
+  //   allCanvases: CanvasItem[]
+  // ) => {
+  //   savedData.forEach((savedCanvas) => {
+  //     const canvasItem = allCanvases.find((c) => c.id === savedCanvas.id);
+  //     console.log(canvasItem?.canvas);
+  //     if (canvasItem && canvasItem.canvas) {
+  //       canvasItem.canvas.loadFromJSON(savedCanvas.data, () => {
+  //         canvasItem?.canvas?.requestRenderAll();
+  //       });
+  //       // canvasItem.canvas.loadFromJSON(savedCanvas.data, () => {
 
-        //   if (canvasItem.canvas) {
-        //     canvasItem.canvas.backgroundColor = canvasItem.canvas.backgroundColor;
-        //   }
-        //   // Ensure background is drawn
-        //   if (
-        //     canvasItem &&
-        //     canvasItem.canvas &&
-        //     canvasItem.canvas.backgroundImage
-        //   ) {
-        //     canvasItem.canvas.backgroundImage.dirty = true;
-        //   }
-        //   canvasItem?.canvas?.requestRenderAll();
-        // });
-        // canvasItem.canvas.renderAll();
-        // canvasItem.canvas.requestRenderAll();
-        // syncCanvasState();
-      }
-    });
-  };
+  //       //   if (canvasItem.canvas) {
+  //       //     canvasItem.canvas.backgroundColor = canvasItem.canvas.backgroundColor;
+  //       //   }
+  //       //   // Ensure background is drawn
+  //       //   if (
+  //       //     canvasItem &&
+  //       //     canvasItem.canvas &&
+  //       //     canvasItem.canvas.backgroundImage
+  //       //   ) {
+  //       //     canvasItem.canvas.backgroundImage.dirty = true;
+  //       //   }
+  //       //   canvasItem?.canvas?.requestRenderAll();
+  //       // });
+  //       // canvasItem.canvas.renderAll();
+  //       // canvasItem.canvas.requestRenderAll();
+  //       // syncCanvasState();
+  //     }
+  //   });
+  // };
 
   return (
-    <div className="flex bg-gray-100 min-w-screen min-h-screen max-h-screen overflow-auto">
+    <div className="flex flex-col md:flex-row bg-gray-100 min-h-screen max-h-screen overflow-auto">
       {/* Left Sidebar */}
-      <aside className="w-3/12 bg-white border- p-4 shadow-sm max-h-screen no-scrollbar overflow-scroll">
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 w-64 md:w-2/10 min-w-2/10 no-scrollbar overflow-scroll  bg-white p-4 shadow-lg transform 
+          transition-transform duration-300 ease-in-out
+          ${showLeft ? "translate-x-0" : "-translate-x-full"}
+          md:static md:translate-x-0 md:w-2/10 md:shadow-sm
+        `}
+      >
         <h2 className="text-lg font-bold mb-4">
           <Logo />
         </h2>
@@ -444,15 +464,27 @@ export default function Dashboard() {
       </aside>
 
       {/* Main Area */}
-      <main className="w-9/12 no-scrollbar overflow-x-scroll max-w-full relative">
+      <main className="flex-1 bg-gray-50 overflow-x-auto no-scrollbar relative">
         {/* Top Toolbar */}
-        <div className="flex items-center w-full bg-white border- p-2 gap-2 shadow-sm">
-          <header className="flex w-full flex-row space-x-3 items-center">
-            {selectedCanvasId}
+        <div className="flex items-center w-full bg-white p-2 gap-2 shadow-sm flex-wrap">
+          {/* Mobile toggles */}
+          <button
+            className="md:hidden px-3 py-2 bg-gray-200 rounded"
+            onClick={() => setShowLeft(!showLeft)}
+          >
+            <Menu size={18} />
+          </button>
+          <button
+            className="md:hidden px-3 py-2 bg-gray-200 rounded"
+            onClick={() => setShowRight(!showRight)}
+          >
+            <PanelRightClose size={18} />
+          </button>
+          <header className="flex w-full justify-center md:justify-start flex-row space-x-3 items-center text-sm">
             <Tooltip text="Add Canvas">
               <button
                 onClick={addNewCanvas}
-                className="px-4 py-2 text-sm text-black bg-slate-100 rounded"
+                className="px-4 py-2 text-black bg-slate-100 rounded"
               >
                 <Plus size={18} />
               </button>
@@ -461,40 +493,17 @@ export default function Dashboard() {
               <button
                 onClick={deleteFrame}
                 disabled={!isDeletable}
-                className={`px-4 py-2 text-sm text-black bg-slate-100 rounded ${
+                className={`px-4 py-2 text-black bg-slate-100 rounded ${
                   !isDeletable && "opacity-50 !cursor-not-allowed"
                 }`}
               >
                 <Trash2 size={18} />
               </button>
             </Tooltip>
-            {/* <button
-              onClick={() => saveProject(sortedCanvasItemsRef.current)}
-              className="px-4 py-2 text-sm text-black bg-slate-100 rounded"
-            >
-              Save Project
-            </button>
-
-            <button
-              onClick={() => {
-                const saved = localStorage.getItem("myProject");
-                const canvases = localStorage.getItem("canvases");
-                if (canvases) {
-                  canvasItemsRef.current=JSON.parse(canvases)
-                  syncCanvasState();
-                }
-                console.log(canvases);
-                if (saved) {
-                  loadProject(JSON.parse(saved), canvasItems);
-                }
-              }}
-            >
-              Load Project
-            </button> */}
             <Tooltip text="Add Text">
               <button
                 onClick={addText}
-                className="px-4 py-2 text-sm text-black bg-slate-100 rounded"
+                className="px-4 py-2 text-black bg-slate-100 rounded"
               >
                 <Type size={18} />
               </button>
@@ -516,7 +525,6 @@ export default function Dashboard() {
           }}
           initialPositionX={10}
           initialPositionY={50}
-          maxPositionX={0}
           centerZoomedOut
           limitToBounds
           onTransformed={({ state }) => {
@@ -524,55 +532,57 @@ export default function Dashboard() {
           }}
         >
           <ZoomControls />
-          <TransformComponent
-            wrapperClass="!w-[59vw]"
-            contentClass="no-scrollbar"
-          >
-            <div className="w-full">
-              <div ref={canvasAreaRef}>
-                <DragDropProvider
-                  onDragEnd={(event) => {
-                    sortedCanvasItemsRef.current = move(
-                      sortedCanvasItemsRef.current,
-                      event
-                    );
-                    syncCanvasState();
-                  }}
-                >
-                  <div className="!flex flex-1/3 gap-16 items-center overflow-scroll no-scrollbar">
-                    {canvasItemsRef.current.map((item, index) => (
-                      <CanvasComponent
-                        key={item.id}
-                        zoom={zoom}
-                        width={canvasWidth}
-                        height={canvasHeight}
-                        deleteCanvas={() => setConfirmOpen(true)}
-                        duplicateCanvas={canvasToDuplicate ?? undefined}
-                        onDuplicateCanvas={duplicateCanvas}
-                        onClick={() => setSelectedCanvasId(item.id)}
-                        isActive={item.id === selectedCanvasId}
-                        className="p-2"
-                        id={item.id}
-                        index={index}
-                        bgColor="#1a1a1b"
-                        transition={{
-                          duration: 5,
-                          idle: false,
-                          easing: "ease-in-out",
-                        }}
-                        onCanvasReady={handleCanvasReady}
-                      />
-                    ))}
-                  </div>
-                </DragDropProvider>
-              </div>
+          <TransformComponent wrapperClass="w-full" contentClass="no-scrollbar">
+            <div ref={canvasAreaRef} className="flex justify-center p-2">
+              <DragDropProvider
+                onDragEnd={(event) => {
+                  sortedCanvasItemsRef.current = move(
+                    sortedCanvasItemsRef.current,
+                    event
+                  );
+                  syncCanvasState();
+                }}
+              >
+                <div className="flex flex-wrap md:flex-nowrap gap-8 items-center justify-center">
+                  {canvasItemsRef.current.map((item, index) => (
+                    <CanvasComponent
+                      key={item.id}
+                      zoom={zoom}
+                      width={canvasWidth}
+                      height={canvasHeight}
+                      deleteCanvas={() => setConfirmOpen(true)}
+                      duplicateCanvas={canvasToDuplicate ?? undefined}
+                      onDuplicateCanvas={duplicateCanvas}
+                      onClick={() => setSelectedCanvasId(item.id)}
+                      isActive={item.id === selectedCanvasId}
+                      className="p-2"
+                      id={item.id}
+                      index={index}
+                      bgColor="#1a1a1b"
+                      transition={{
+                        duration: 5,
+                        idle: false,
+                        easing: "ease-in-out",
+                      }}
+                      onCanvasReady={handleCanvasReady}
+                    />
+                  ))}
+                </div>
+              </DragDropProvider>
             </div>
           </TransformComponent>
         </TransformWrapper>
       </main>
 
       {/* Right Sidebar */}
-      <aside className="w-3/12 bg-white border- py-4 px-2  shadow-sm overflow-scroll max-h-screen max-w-full no-scrollbar">
+      <aside
+        className={`
+          fixed inset-y-0 right-0 z-50 w-64 md:w-2/10  no-scrollbar bg-white p-2 overflow-scroll shadow-lg transform 
+          transition-transform duration-300 ease-in-out
+          ${showRight ? "translate-x-0" : "translate-x-full"}
+          md:static md:translate-x-0 md:w-2/10 md:shadow-sm
+        `}
+      >
         <div className="mb-4 w-full">
           <ExportDialog sortedCanvasItems={sortedCanvasItemsRef.current} />
         </div>
@@ -581,10 +591,20 @@ export default function Dashboard() {
           selectedCanvas={selectedCanvas}
         />
       </aside>
+      {/* Backdrop (only mobile) */}
+      {(showLeft || showRight) && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => {
+            setShowLeft(false);
+            setShowRight(false);
+          }}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmOpen}
-        message={`Are you sure you want to delete  "${selectedCanvasId}"?`}
+        message={`Are you sure you want to delete "${selectedCanvasId}"?`}
         onConfirm={() => {
           deleteCanvas(selectedCanvasId);
           setConfirmOpen(false);
