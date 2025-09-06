@@ -118,10 +118,20 @@ export default function LeftSidebar({
               <div className="flex flex-col px-2 gap-y-2">
                 {canvasItems.map((item, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <Hash className="w-4 h-4 text-gray-500" />
+                    <Hash
+                      className={`w-4 h-4   ${
+                        selectedCanvasId === item.id
+                          ? " !text-blue-500"
+                          : "text-gray-500"
+                      }`}
+                    />
                     <p
                       onClick={() => setSelectedCanvas(item.id)}
-                      className="font-medium truncate cursor-pointer"
+                      className={`cursor-pointer ${
+                        selectedCanvasId === item.id
+                          ? " text-blue-500"
+                          : "text-gray-700"
+                      }`}
                     >
                       {item.id}
                     </p>

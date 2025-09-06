@@ -33,10 +33,10 @@ export default function Dashboard() {
   // 🔑 useRef instead of useState
   const canvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1", nid: 1 }]);
   const sortedCanvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1" }]);
-  const [_, setCanvasItems] = useState<CanvasItem[]>([]);
+  const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
   const [sortedCanvasItems, setSortedCanvasItems] = useState<CanvasItem[]>([]);
 
-  var canvasWidth = 450
+  var canvasWidth = 450;
   var canvasHeight = 800;
 
   // Get the currently selected canvas id
@@ -337,7 +337,7 @@ export default function Dashboard() {
       handler: () => duplicateCanvas(selectedCanvasId),
     },
     {
-      keys: ["ctrl", "+","="],
+      keys: ["ctrl", "+", "="],
       handler: () => addNewCanvas(),
     },
     {
@@ -375,6 +375,56 @@ export default function Dashboard() {
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [shiftPressed]);
+
+  // Save all canvases into a single JSON object
+  const saveProject = (allCanvases: CanvasItem[]) => {
+    const projectData = allCanvases.map((canvasItem) => ({
+      id: canvasItem.id,
+      data: canvasItem.canvas?.toJSON(), // FabricJS export
+    }));
+
+    // Example: save to localStorage
+    localStorage.setItem("myProject", JSON.stringify(projectData));
+    localStorage.setItem("canvases", JSON.stringify(canvasItemsRef.current));
+    localStorage.setItem("lastSaved", new Date().toISOString());
+    toast.success("Project saved!", { duration: 1000 });
+
+    // Or send projectData to your backend DB via API
+    return projectData;
+  };
+
+  const loadProject = (
+    savedData: { id: string; data: any }[],
+    allCanvases: CanvasItem[]
+  ) => {
+    savedData.forEach((savedCanvas) => {
+      const canvasItem = allCanvases.find((c) => c.id === savedCanvas.id);
+      console.log(canvasItem?.canvas);
+      if (canvasItem && canvasItem.canvas) {
+        canvasItem.canvas.loadFromJSON(savedCanvas.data, () => {
+          canvasItem?.canvas?.requestRenderAll();
+        });
+        // canvasItem.canvas.loadFromJSON(savedCanvas.data, () => {
+
+        //   if (canvasItem.canvas) {
+        //     canvasItem.canvas.backgroundColor = canvasItem.canvas.backgroundColor;
+        //   }
+        //   // Ensure background is drawn
+        //   if (
+        //     canvasItem &&
+        //     canvasItem.canvas &&
+        //     canvasItem.canvas.backgroundImage
+        //   ) {
+        //     canvasItem.canvas.backgroundImage.dirty = true;
+        //   }
+        //   canvasItem?.canvas?.requestRenderAll();
+        // });
+        // canvasItem.canvas.renderAll();
+        // canvasItem.canvas.requestRenderAll();
+        // syncCanvasState();
+      }
+    });
+  };
 
   return (
     <div className="flex bg-gray-100 min-w-screen min-h-screen max-h-screen overflow-auto">
@@ -418,6 +468,29 @@ export default function Dashboard() {
                 <Trash2 size={18} />
               </button>
             </Tooltip>
+            {/* <button
+              onClick={() => saveProject(sortedCanvasItemsRef.current)}
+              className="px-4 py-2 text-sm text-black bg-slate-100 rounded"
+            >
+              Save Project
+            </button>
+
+            <button
+              onClick={() => {
+                const saved = localStorage.getItem("myProject");
+                const canvases = localStorage.getItem("canvases");
+                if (canvases) {
+                  canvasItemsRef.current=JSON.parse(canvases)
+                  syncCanvasState();
+                }
+                console.log(canvases);
+                if (saved) {
+                  loadProject(JSON.parse(saved), canvasItems);
+                }
+              }}
+            >
+              Load Project
+            </button> */}
             <Tooltip text="Add Text">
               <button
                 onClick={addText}

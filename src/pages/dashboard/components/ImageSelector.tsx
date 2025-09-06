@@ -37,8 +37,8 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
   };
   function upscaleImage(
     imageURL: string,
-    minWidth = 800,
-    minHeight = 1700
+    minWidth: number,
+    minHeight: number
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -57,8 +57,8 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
         // const scale = Math.max(scaleX, scaleY);
 
         const canvas = document.createElement("canvas");
-        canvas.width = 800;
-        canvas.height = 1700;
+        canvas.width = minWidth;
+        canvas.height = minHeight;
         // canvas.width = Math.round(width * scale);
         // canvas.height = Math.round(height * scale);
 
@@ -97,11 +97,12 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       alert("Please select a phone frame image first.");
       return;
     }
-    const upscaledImageURL = await upscaleImage(imageURL);
-    console.log(upscaledImageURL, selectedCanvasId);
+    const upscaledImageURL = await upscaleImage(imageURL, screenWidth, screenHeight);
+    // console.log(upscaledImageURL, selectedCanvasId);
     const innerImg = await FabricImage.fromURL(upscaledImageURL, {
       crossOrigin: "anonymous",
     });
+    console.log(innerImg.width, innerImg.height);
 
     const imageWidth = innerImg.width || 0;
     const imageHeight = innerImg.height || 0;
@@ -111,13 +112,15 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
     const frameScaleX = frame.scaleX || 1;
     const frameScaleY = frame.scaleY || 1;
 
-    switch ("android") {
-      //  case "tab":
-      //    scale = Math.max(
-      //      (screenWidth * frameScaleX) / imageWidth,
-      //      (screenHeight * frameScaleY) / imageHeight
-      //    );
-      //    break;
+    let devicetype = device.type;
+
+    switch (devicetype) {
+      case "tab":
+        scale = Math.max(
+          (screenWidth * frameScaleX) / imageWidth,
+          (screenHeight * frameScaleY) / imageHeight
+        );
+        break;
       default:
         scale = Math.min(
           (screenWidth * frameScaleX) / imageWidth,
@@ -147,9 +150,9 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       // scaleY: innerImg.scaleY,
       // angle: frame.angle,
       absolutePositioned: true,
-      rx: device.rx ,
-      ry: device.ry ,
-      left: innerImg.left,
+      rx: device.rx,
+      ry: device.ry,
+      left: frame.left,
       top: frame.top,
     });
     innerImg.clipPath = clipRect;
