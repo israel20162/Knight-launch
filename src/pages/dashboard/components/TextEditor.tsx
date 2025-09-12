@@ -98,7 +98,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
         <textarea
           value={selText || selectedText?.text}
           onChange={(e) => {
-            setSelText(e.target.value);
+            // setSelText(e.target.value);
             updateTextProperty("text", e.target.value);
           }}
           disabled={!isActive}

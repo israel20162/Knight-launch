@@ -1,4 +1,4 @@
-import { Canvas, FabricImage, FabricText, Rect, Group } from "fabric";
+import { Canvas, FabricImage, FabricText, Rect } from "fabric";
 import React, { useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { ArrowLeftRight, Copy, Trash2 } from "lucide-react";
@@ -21,10 +21,16 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     items,
     onDuplicateCanvas,
     duplicateCanvas,
+    translations,
   }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricCanvasRef = useRef<HTMLDivElement>(null);
-    const { ref, handleRef, isDragging, isDropping } = useSortable({
+    const {
+      ref: sortableRef,
+      handleRef,
+      isDragging,
+      isDropping,
+    } = useSortable({
       id,
       index,
       transition,
@@ -60,10 +66,23 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
           fabricCanvas.add(await obj.clone());
           fabricCanvas.requestRenderAll();
         });
+        if (translations?.texts && Array.isArray(translations?.texts)) {
+          translations?.texts.forEach((t) => {
+            const textObj = new FabricText(t.text, {
+              originX: t.originX || "center",
+              left: t.left,
+              top: t.top,
+              fontSize: t.fontSize,
+              fill: t.fill,
+            });
+            fabricCanvas.add(textObj);
+          });
+        }
 
         if (items?.text) {
           const text = new FabricText(items?.text.value, {
             originX: "center",
+
             left: fabricCanvas.getWidth() / 2,
             top: items.text.top,
             fontSize: items.text.fontSize,
@@ -194,15 +213,12 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     //  }
     // }
 
-    
-    
-
     return (
       <div
         className={` p-2  ${className} ${
           isActive ? "border border-blue-500 p-4" : ""
         } `}
-        ref={!items?.text && !items?.frame ? ref : fabricCanvasRef}
+        ref={!items?.text && !items?.frame ? sortableRef : fabricCanvasRef}
       >
         <div onClick={onClick}>
           {/* {id} */}

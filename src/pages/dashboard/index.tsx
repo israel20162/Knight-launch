@@ -33,14 +33,18 @@ import Logo from "../../components/ui/logo";
 import { useKeyboardShortcuts } from "../../lib/hooks/useKeyboardShortcuts";
 import { toast } from "sonner"; // option
 import { ConfirmDialog } from "../../components/ui/confirmDialog";
+import TranslationsUploader from "../../components/ui/importFromJsonModal";
+import { Button } from "@radix-ui/themes";
+// import { layoutType } from '../../types/index';
 
 export default function Dashboard() {
-  const [zoom, setZoom] = useState<number>(0.5);
+  const [zoom, setZoom] = useState<number>(0.3);
   const canvasAreaRef = useRef<HTMLDivElement | null>(null);
 
   // 🔑 useRef instead of useState
   const canvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1" }]);
   const sortedCanvasItemsRef = useRef<CanvasItem[]>([{ id: "canvas-1" }]);
+  const translatedCanvasesRef = useRef<CanvasItem[]>([]);
   const [_, setCanvasItems] = useState<CanvasItem[]>([]);
   const [sortedCanvasItems, setSortedCanvasItems] = useState<CanvasItem[]>([]);
 
@@ -209,11 +213,15 @@ export default function Dashboard() {
     // if (id !== selectedCanvasId) return;
 
     // Dispose of canvas
-    const canvasToDelete = canvasItemsRef.current.find((c) => c.id === id);
+    const canvasToDelete = canvasItemsRef.current.find(
+      (canvas) => canvas.id === id
+    );
     disposeCanvas(canvasToDelete);
 
     // Remove from refs
-    canvasItemsRef.current = canvasItemsRef.current.filter((c) => c.id !== id);
+    canvasItemsRef.current = canvasItemsRef.current.filter(
+      (canvas) => canvas.id !== id
+    );
     sortedCanvasItemsRef.current = [...canvasItemsRef.current];
 
     // Now decide the next canvas
@@ -243,7 +251,7 @@ export default function Dashboard() {
     const existingIds = canvasItemsRef.current.map((c) => c.id);
     while (existingIds.includes(newId)) {
       copyIndex++;
-      newId = `${baseId}(${copyIndex})`;
+      newId = `${baseId} (${copyIndex})`;
     }
 
     const newItem: CanvasItem = { id: newId };
@@ -251,7 +259,7 @@ export default function Dashboard() {
     // Insert the new item right after the original in the array
     const originalIndex = canvasItemsRef.current.findIndex((c) => c.id === id);
 
-    const newCanvasItems = [...canvasItemsRef.current];
+    const newCanvasItems = [...sortedCanvasItemsRef.current];
     newCanvasItems.splice(originalIndex + 1, 0, newItem); // insert after original
 
     canvasItemsRef.current = newCanvasItems;
@@ -264,6 +272,45 @@ export default function Dashboard() {
       syncCanvasState();
       toast.success(`${id} duplicated`);
     }, 500);
+  };
+
+  const duplicateTranslatedCanvas = (id: string, lang: string) => {
+    const canvasToDuplicate = canvasItemsRef.current.find((c) => c.id === id);
+    if (!canvasToDuplicate || !canvasToDuplicate.canvas) return;
+
+    // Remove any trailing "(number)" from base ID
+    const baseId = id.replace(/\(\d+\)$/, "");
+
+    // Find a unique ID like "canvas-1(1)", "canvas-1(2)", etc.
+    let copyIndex = 1;
+    let newId = `${baseId}(${copyIndex}) ${lang}`;
+
+    const existingIds = canvasItemsRef.current.map((c) => c.id);
+    while (existingIds.includes(newId)) {
+      copyIndex++;
+      newId = `${baseId} (${copyIndex}) ${lang}`;
+    }
+
+    const newItem: CanvasItem = { id: newId };
+
+    // Insert the new item right after the original in the array
+    const originalIndex = translatedCanvasesRef.current.findIndex(
+      (c) => c.id === id
+    );
+
+    const newCanvasItems = [...translatedCanvasesRef.current];
+    newCanvasItems.splice(originalIndex + 1, 0, newItem); // insert after original
+
+    translatedCanvasesRef.current = newCanvasItems;
+    translatedCanvasesRef.current = [...newCanvasItems];
+
+    // setSelectedCanvasId(newId);
+    setCanvasToDuplicate(canvasToDuplicate.canvas);
+
+    // setTimeout(() => {
+    //   // syncCanvasState();
+    //   toast.success(`${id} duplicated`);
+    // }, 500);
   };
 
   const addText = () => {
@@ -439,6 +486,161 @@ export default function Dashboard() {
   //   });
   // };
 
+  const handleExportAsJson = (data: Record<string, any>) => {
+    // Convert data to JSON string with indentation
+    const jsonString = JSON.stringify(data, null, 2);
+
+    // Create a Blob with the JSON data
+    const blob = new Blob([jsonString], { type: "application/json" });
+
+    // Create a temporary URL for the Blob
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary anchor element to trigger the download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "data.json"; // File name for download
+    document.body.appendChild(link);
+    link.click();
+
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportTexts = (
+    canvases: CanvasItem[],
+    languages: string[] = ["en", "fr", "es"]
+  ) => {
+    const result: Record<string, any> = {};
+    languages.forEach((lang) => {
+      const langJson: any = { language: lang, canvases: [] };
+      canvases.forEach((canvas, canvasIndex) => {
+        const texts: any[] = [];
+
+        canvas.canvas?.getObjects().forEach(async (obj, _) => {
+          if (!(obj instanceof IText)) return;
+          console.log(obj.text);
+          texts.push({
+            canvasId: `${canvas.id}`, // unique reference
+            text: lang === languages[0] ? obj.text || "" : "", // only fill text for the first language
+            originX: obj.originX,
+            left: Math.round(obj.left),
+            top: Math.round(obj.top),
+            fontSize: obj.fontSize,
+            fill: obj.fill,
+          });
+        });
+
+        langJson.canvases.push({
+          id: canvasIndex,
+          texts,
+        });
+      });
+      result[lang] = langJson;
+    });
+
+    handleExportAsJson(result);
+    return result;
+  };
+  const exportCanvases = (
+    canvases: CanvasItem[],
+    languages: string[] = ["en", "fr", "es"]
+  ) => {
+    const result: Record<string, any> = {};
+
+    languages.forEach((lang) => {
+      const langJson: any = { language: lang, canvases: [] };
+
+      canvases.forEach((canvas, canvasIndex) => {
+        const texts: any[] = [];
+
+        // Collect all texts separately for translations
+        canvas.canvas?.getObjects().forEach((obj) => {
+          if (obj instanceof IText) {
+            texts.push({
+              canvasId: `${canvas.id}`,
+              text: lang === languages[0] ? obj.text || "" : "", // fill only first language
+              originX: obj.originX,
+              left: Math.round(obj.left || 0),
+              top: Math.round(obj.top || 0),
+              fontSize: obj.fontSize,
+              fill: obj.fill,
+            });
+          }
+        });
+
+        // Full FabricJS export (background, objects, positions, etc.)
+        const fullCanvasData = canvas.canvas?.toJSON();
+
+        langJson.canvases.push({
+          id: canvasIndex,
+          texts,
+          fullCanvas: fullCanvasData,
+          background: {
+            color: canvas.canvas?.backgroundColor,
+            image: canvas.canvas?.backgroundImage?.toObject?.() || null,
+          },
+        });
+      });
+
+      result[lang] = langJson;
+    });
+
+    handleExportAsJson(result);
+    return result;
+  };
+  
+
+  // const applyTranslations = async (json: any, lang: string) => {
+  //   json[lang].canvases.forEach((canvasData: any) => {
+  //     const canvasItem = canvasItemsRef.current.find(
+  //       (c) => c.id === `canvas-${canvasData.id}`
+  //     );
+  //     if (!canvasItem || !canvasItem.canvas) return;
+  //     duplicateTranslatedCanvas(canvasItem.id,lang);
+  //   });
+  // };
+
+  // const handleImport = async (json: any) => {
+  //   // apply "fr" for example
+  //   const translatedCanvases = await applyTranslations( json, "fr");
+  //   console.log("✅ Translated canvases", translatedCanvases);
+  // };
+
+  const validateTranslationsJson = (
+    json: any,
+    languages: string[]
+    // originalCanvases: CanvasItem[]
+  ): boolean => {
+    if (typeof json !== "object") return false;
+
+    for (const lang of languages) {
+      const section = json[lang];
+      if (!section || section.language !== lang) return false;
+      if (!Array.isArray(section.canvases)) return false;
+      // if (section.canvases.length !== originalCanvases.length) return false;
+
+      for (let i = 0; i < section.canvases.length; i++) {
+        const canvasData = section.canvases[i];
+        // if (canvasData.id !== i) return false;
+        if (!Array.isArray(canvasData.texts)) return false;
+
+        for (const t of canvasData.texts) {
+          if (typeof t.canvasId !== "string") return false;
+          if (typeof t.text !== "string") return false;
+
+          // const originalCanvas = originalCanvases.find((c) => c.id === t.canvasId);
+          // if (!originalCanvas) return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
+  // Example usage:
+
   return (
     <div className="flex flex-col md:flex-row bg-gray-100 min-h-screen max-h-screen overflow-auto">
       {/* Left Sidebar */}
@@ -453,6 +655,18 @@ export default function Dashboard() {
         <h2 className="text-lg font-bold mb-4">
           <Logo />
         </h2>
+        {/* <div className="p-4 flex gap-2">
+          <ImportJsonModal
+            onImport={handleImport}
+            validate={(json) =>
+              validateTranslationsJson(
+                json,
+                ["en", "fr", "es"]
+                // canvasItemsRef.current
+              )
+            }
+          />
+        </div> */}
         <LeftSidebar
           addFrame={addFrame}
           addCanvas={addNewCanvas}
@@ -474,6 +688,22 @@ export default function Dashboard() {
           >
             <Menu size={18} />
           </button>
+          <button
+            onClick={() => {
+              const exported = exportTexts(canvasItemsRef.current);
+              console.log(JSON.stringify(exported, null, 2));
+            }}
+            className=""
+          >
+            <Button className="text-sm font-medium">export translation </Button>
+          </button>
+          <Button
+            onClick={() =>
+              exportCanvases(sortedCanvasItems, ["en", "fr", "es"])
+            }
+          >
+            export Canvas
+          </Button>
           <button
             className="md:hidden px-3 py-2 bg-gray-200 rounded"
             onClick={() => setShowRight(!showRight)}
@@ -543,30 +773,48 @@ export default function Dashboard() {
                   syncCanvasState();
                 }}
               >
-                <div className="flex flex-wrap md:flex-nowrap gap-8 items-center justify-center">
-                  {canvasItemsRef.current.map((item, index) => (
-                    <CanvasComponent
-                      key={item.id}
-                      zoom={zoom}
-                      width={canvasWidth}
-                      height={canvasHeight}
-                      deleteCanvas={() => setConfirmOpen(true)}
-                      duplicateCanvas={canvasToDuplicate ?? undefined}
-                      onDuplicateCanvas={duplicateCanvas}
-                      onClick={() => setSelectedCanvasId(item.id)}
-                      isActive={item.id === selectedCanvasId}
-                      className="p-2"
-                      id={item.id}
-                      index={index}
-                      bgColor="#1a1a1b"
-                      transition={{
-                        duration: 5,
-                        idle: false,
-                        easing: "ease-in-out",
-                      }}
-                      onCanvasReady={handleCanvasReady}
-                    />
-                  ))}
+                <div className="flex flex-col">
+                  <div className="flex flex-wrap md:flex-nowrap gap-8 items-center justify-center">
+                    {canvasItemsRef.current.map((item, index) => (
+                      <CanvasComponent
+                        key={item.id}
+                        zoom={zoom}
+                        width={canvasWidth}
+                        height={canvasHeight}
+                        deleteCanvas={() => setConfirmOpen(true)}
+                        duplicateCanvas={canvasToDuplicate ?? undefined}
+                        onDuplicateCanvas={duplicateCanvas}
+                        onClick={() => setSelectedCanvasId(item.id)}
+                        isActive={item.id === selectedCanvasId}
+                        className="p-2"
+                        id={item.id}
+                        index={index}
+                        bgColor="#1a1a1b"
+                        transition={{
+                          duration: 5,
+                          idle: false,
+                          easing: "ease-in-out",
+                        }}
+                        onCanvasReady={handleCanvasReady}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex flex-col md:flex-nowrap gap-8 items-center justify-center">
+                    <h1>translations</h1>
+                    <div className="flex  md:flex-nowrap gap-8 items-center justify-center">
+                      <TranslationsUploader
+                        zoom={zoom}
+                        canvasWidth={canvasWidth}
+                        canvasHeight={canvasHeight}
+                        setConfirmOpen={setConfirmOpen}
+                        canvasToDuplicate={canvasToDuplicate ?? undefined}
+                        duplicateCanvas={duplicateCanvas}
+                        setSelectedCanvasId={setSelectedCanvasId}
+                        selectedCanvasId={selectedCanvasId}
+                        handleCanvasReady={handleCanvasReady}
+                      />
+                    </div>
+                  </div>
                 </div>
               </DragDropProvider>
             </div>

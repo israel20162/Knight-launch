@@ -78,6 +78,17 @@ export interface CanvasComponentProps {
   height?: number;
   bgColor?: string;
   items?: layoutType;
+  translations?:{
+  texts ?: {
+    canvasId: string;
+    text: string;
+    originX: "left" | "center" | "right";
+    left: number;
+    top: number;
+    fontSize: number;
+    fill: string;
+  }[]
+};
   className?: string;
   zoom?: number;
   transition: { duration?: number; easing?: string; idle: boolean } | null
