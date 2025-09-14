@@ -1,9 +1,9 @@
-import { Canvas, FabricImage, IText } from "fabric";
+import { Canvas, FabricImage } from "fabric";
 import React, { useCallback, useEffect, useState } from "react";
 import { CanvasComponent } from "../../../components/CanvasComponent";
 import type { CanvasItem, layoutType } from "../../../types";
 import { layouts } from "../utils/layouts";
-import { countObjectsByType } from "../utils";
+import { countObjectsByType } from "../utils/functions";
 interface LayoutSelectorProps {
   selectedCanvas: Canvas | undefined;
 }
@@ -84,15 +84,17 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
         <div key={item.id} onClick={() => add(item)} className={`p- `}>
           <CanvasComponent
             height={layoutCanvasHeight}
-            deleteCanvas={() => { } }
+            deleteCanvas={() => {}}
             items={item}
             index={index}
             width={layoutCanvaswidth}
             id={`canvas-${item.id}`}
             onCanvasReady={handleCanvasReady}
-             onDuplicateCanvas={function (id: string): void {
+            onDuplicateCanvas={function (_: string): void {
               throw new Error("Function not implemented.");
-            } } transition={null}          />
+            }}
+            transition={null}
+          />
         </div>
       ))}
     </div>

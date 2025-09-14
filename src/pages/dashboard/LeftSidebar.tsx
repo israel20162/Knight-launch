@@ -1,35 +1,25 @@
 import { ChevronDown, Plus, Hash, ImageIcon, Layout } from "lucide-react";
 import { useState } from "react";
 import { DeviceSelector } from "./components/DeviceSelector";
-import type { CanvasItem } from "../../types";
 import { ImageSelector } from "./components/ImageSelector";
-import type { Canvas } from "fabric";
 import { Tooltip } from "../../components/ui/tooltip";
 import { LayoutSelector } from "./components/LayoutSelector";
-interface LeftSidebarProps {
-  addFrame: (imageUrl: string) => void;
-  addCanvas: () => void;
-  canvasItems: CanvasItem[];
-  selectedCanvas: Canvas | undefined;
-  selectedCanvasId: string;
-  setSelectedCanvas: (id: string) => void;
-}
+import { useCanvasStore } from "../../context/store/CanvasStore";
+interface LeftSidebarProps {}
 
-export default function LeftSidebar({
-  addFrame,
-  addCanvas,
-  canvasItems,
-  selectedCanvas,
-  setSelectedCanvas,
-  selectedCanvasId,
-}: LeftSidebarProps) {
+export default function LeftSidebar({}: LeftSidebarProps) {
   const [activeTab, setActiveTab] = useState<"editor" | "assets">("editor");
   const [openAccordion, setOpenAccordion] = useState<string | null>("devices");
 
   const toggleAccordion = (key: string) => {
     setOpenAccordion((prev) => (prev === key ? null : key));
   };
-
+  const addFrame = useCanvasStore((s) => s.addFrame);
+  const addCanvas = useCanvasStore((s) => s.addNewCanvas);
+  const selectedCanvasId = useCanvasStore((s) => s.selectedCanvasId);
+  const setSelectedCanvasId = useCanvasStore((s) => s.setSelectedCanvasId);
+  const selectedCanvas = useCanvasStore((s) => s.selectedCanvas);
+  const canvasItems = useCanvasStore((s) => s.canvasItems);
   return (
     <div className="max-h-screen w-full overflow-y-auto no-scrollbar bg-white">
       {/* Tabs */}
@@ -126,7 +116,7 @@ export default function LeftSidebar({
                       }`}
                     />
                     <p
-                      onClick={() => setSelectedCanvas(item.id)}
+                      onClick={() => setSelectedCanvasId(item.id)}
                       className={`cursor-pointer ${
                         selectedCanvasId === item.id
                           ? " text-blue-500"

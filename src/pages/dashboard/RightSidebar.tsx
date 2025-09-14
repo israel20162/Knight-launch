@@ -2,19 +2,14 @@ import { ImageIcon, LetterText } from "lucide-react";
 import { useState } from "react";
 import { TextEditor } from "./components/TextEditor";
 import { BackgroundEditor } from "./components/BackgroundEditor";
-import type { Canvas } from "fabric";
-import type { CanvasItem } from "../../types";
+import { useCanvasStore } from "../../context/store/CanvasStore";
 
-interface RightSidebarProps {
-  selectedCanvas: Canvas | undefined;
-  allCanvases: CanvasItem[];
-}
+interface RightSidebarProps {}
 
-export default function RightSidebar({
-  selectedCanvas,
-  allCanvases,
-}: RightSidebarProps) {
+export default function RightSidebar({}: RightSidebarProps) {
   const [activeTab, setActiveTab] = useState<"text" | "background">("text");
+  const selectedCanvas = useCanvasStore((s) => s.selectedCanvas);
+  const allCanvases = useCanvasStore((s) => s.sortedCanvasItems);
   return (
     <div className=" max-h-screen w-auto overflow-y-scroll no-scrollbar  bg-white">
       {/* Tabs */}

@@ -1,40 +1,46 @@
-import { useState } from "react";
-import { Dialog, Button, RadioGroup, Flex, Checkbox,Grid } from "@radix-ui/themes";
+import { use, useRef, useState } from "react";
+import {
+  Dialog,
+  Button,
+  RadioGroup,
+  Flex,
+  Checkbox,
+  Grid,
+} from "@radix-ui/themes";
 import { Download } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { Label } from "@radix-ui/themes/components/context-menu";
 import type { CanvasItem } from "../../../types";
-
-// Possible Google Play screenshot presets
+import TranslationStep from "./exportComponents/TranslationStep";
+import { IText } from "fabric";
+import { CanvasComponent } from "../../../components/CanvasComponent";
+import { useCanvasStore } from "../../../context/store/CanvasStore";
+import { useExportStore } from "../../../context/store/ExportStore";
 type ScreenshotPreset =
-  | "phone-portrait" 
+  | "phone-portrait"
   | "phone-landscape"
   | "tablet-portrait";
-
-interface ExportDialogProps {
-  // Your array of canvas items. Each must have a .canvas with toDataURL()
-  sortedCanvasItems: CanvasItem[];
-  selectedCanvas?: {
-    width: number;
-    height: number;
-  } | null;
-}
-/**
- * Available screenshot presets for Play Store:
- * - Two‐screenshot minimum across devices (any orientation).
- * - "Highly recommended" for apps: ≥4 screenshots at 1920×1080 or 1080×1920.
- * - "Highly recommended" for games: ≥3 landscape (1920×1080) or ≥3 portrait (1080×1920).
- */
 type ExportMode =
   | "minimum"
   | "app-highly-recommended"
   | "game-highly-recommended";
 
+interface ExportDialogProps {
+  // sortedCanvasItems: CanvasItem[];
+  selectedCanvas?: {
+    width: number;
+    height: number;
+  } | null;
+}
+
 export const ExportDialog: React.FC<ExportDialogProps> = ({
-  sortedCanvasItems,
+  // sortedCanvasItems,
 }) => {
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(0);
+
+  
   const [mode, setMode] = useState<ExportMode>("minimum");
   const [preset, setPreset] = useState<ScreenshotPreset>("phone-portrait");
   const [orientation, setOrientation] = useState<"portrait" | "landscape">(
@@ -43,37 +49,46 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   const [format, setFormat] = useState<"jpeg" | "png">("png");
   const [highQuality, setHighQuality] = useState(false);
   const [loading, setLoading] = useState(false);
-  // Mapping presets → [width, height]
+
+  const [translations, setTranslations] = useState<any>(null);
+  const translatedCanvasesRef = useRef<
+    Record<string, { id: string; items: any }[]>
+  >({});
+  const [language, setLanguage] = useState<string | null>(null);
+
   const presetDimensions: Record<ScreenshotPreset, [number, number]> = {
     "phone-portrait": [1080, 1920],
     "phone-landscape": [1920, 1080],
     "tablet-portrait": [1200, 1920],
   };
 
-  /**
-   * Exports all canvases as ZIP of JPEGs that meet Google Play's requirements.
-   *
-   * @param sortedCanvasItems  Array of CanvasItem, each with a .canvas
-   * @param mode               'minimum' | 'app-highly-recommended' | 'game-highly-recommended'
-   */
+  const handleCanvasReady = useCanvasStore((s) => s.handleCanvasReady);
+  const selectedCanvasId = useCanvasStore((s) => s.selectedCanvasId);
+  const setSelectedCanvasId = useCanvasStore((s) => s.setSelectedCanvasId);
+  const canvasHeight = useCanvasStore((s) => s.canvasHeight);
+  const canvasWidth = useCanvasStore((s) => s.canvasWidth);
+  const setConfirmOpen = useCanvasStore((s) => s.setConfirmOpen);
+  const canvasToDuplicate = useCanvasStore((s) => s.canvasToDuplicate);
+  const duplicateCanvas = useCanvasStore((s) => s.duplicateCanvas);
+  const sortedCanvasItems = useCanvasStore((s) => s.sortedCanvasItems);
+
+
   async function exportAllCanvasAsPlayStoreScreenshots(): Promise<void> {
-    // 1. REQUIRE AT LEAST TWO CANVASES (minimum guideline)
     if (sortedCanvasItems.length < 2) {
       alert("You must provide at least two screenshots to export.");
       return;
     }
 
-    // 2. DETERMINE HOW MANY SCREENSHOTS ARE REQUIRED
     let requiredCount: number;
     switch (mode) {
       case "app-highly-recommended":
-        requiredCount = 4; // 4 app screenshots (any mix of portrait/landscape)
+        requiredCount = 4;
         break;
       case "game-highly-recommended":
-        requiredCount = 3; // 3 game screenshots (preferably all landscape or all portrait)
+        requiredCount = 3;
         break;
       default:
-        requiredCount = 2; // minimum
+        requiredCount = 2;
     }
 
     if (sortedCanvasItems.length < requiredCount) {
@@ -83,26 +98,17 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       return;
     }
 
-    // 3. SET THE TARGET DIMENSIONS BASED ON ORIENTATION
-    //    - Landscape target: 1920×1080 (px)  (16:9)
-    //    - Portrait target: 1080×1920 (px)  (9:16)
-    //    All final dimensions must be within [320, 3840] px,
-    //    and maxDimension ≤ 2 × minDimension (this is already true for 1920/1080).
     setLoading(true);
     const ZIP = new JSZip();
     const scalePromises: Promise<void>[] = [];
 
-    // Determine target dimensions based on chosen preset and orientation override
     let [baseW, baseH] = presetDimensions[preset];
     if (orientation === "portrait") {
-      // ensure baseW < baseH
       [baseW, baseH] = baseW <= baseH ? [baseW, baseH] : [baseH, baseW];
     } else {
-      // ensure baseW > baseH
       [baseW, baseH] = baseW >= baseH ? [baseW, baseH] : [baseH, baseW];
     }
 
-    // Clamp to Play Store guidelines: [320, 3840], max ≤ 2×min
     const clamp = (v: number) => Math.max(320, Math.min(3840, v));
     baseW = clamp(baseW);
     baseH = clamp(baseH);
@@ -114,7 +120,6 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       else baseH = clamp(newMin);
     }
 
-    // 3. GENERATE EACH CANVAS IMAGE
     for (let idx = 0; idx < sortedCanvasItems.length; idx++) {
       const item = sortedCanvasItems[idx];
       const canvas = item.canvas;
@@ -124,14 +129,10 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       const origH = canvas.getHeight();
       if (!origW || !origH) continue;
 
-      // Compute multiplier so that original canvas → target dimensions
-      // We match width to baseW (assuming aspect ratio is correct 9:16 or 16:9).
       const multiplier = baseW / origW;
-      // const multiplier = 6;
 
       scalePromises.push(
         (async () => {
-          // Generate data URL in chosen format
           const dataURL = canvas.toDataURL({
             format,
             quality: format === "jpeg" ? (highQuality ? 1 : 0.8) : undefined,
@@ -139,21 +140,19 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           });
 
           const blob: Blob = await fetch(dataURL).then((r) => r.blob());
-
-          // Use .jpg extension for JPEG, .png for PNG
           const ext = format === "jpeg" ? "jpg" : "png";
           ZIP.file(`screenshot-${idx + 1}.${ext}`, blob);
         })()
       );
     }
 
-    // 4. ZIP + DOWNLOAD
     try {
       await Promise.all(scalePromises);
       ZIP.generateAsync({ type: "blob" }).then((zipBlob) => {
         saveAs(zipBlob, "play-store-screenshots.zip");
         setLoading(false);
         setOpen(false);
+        setStep(0);
       });
     } catch (error) {
       console.error("Error exporting screenshots:", error);
@@ -161,138 +160,269 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       setLoading(false);
     }
   }
+  const handleExportAsJson = (data: Record<string, any>) => {
+    // Convert data to JSON string with indentation
+    const jsonString = JSON.stringify(data, null, 2);
+
+    // Create a Blob with the JSON data
+    const blob = new Blob([jsonString], { type: "application/json" });
+
+    // Create a temporary URL for the Blob
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary anchor element to trigger the download
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "translations.json"; // File name for download
+    document.body.appendChild(link);
+    link.click();
+
+    // Clean up
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+  const exportTexts = (
+    canvases: CanvasItem[],
+    languages: { code: string; name: string }[]
+  ) => {
+    const result: Record<string, any> = {};
+    languages.forEach((lang) => {
+      const langJson: any = { language: lang.name, canvases: [] };
+      canvases.forEach((canvas, canvasIndex) => {
+        const texts: any[] = [];
+
+        canvas.canvas?.getObjects().forEach(async (obj, _) => {
+          if (!(obj instanceof IText)) return;
+          texts.push({
+            canvasId: `${canvas.id}`, // unique reference
+            text: lang === languages[0] ? obj.text || "" : "", // only fill text for the first language
+            originX: obj.originX,
+            left: Math.round(obj.left),
+            top: Math.round(obj.top),
+            fontSize: obj.fontSize,
+            fill: obj.fill,
+          });
+        });
+        const fullCanvasData = canvas.canvas?.toJSON();
+
+        langJson.canvases.push({
+          id: canvasIndex,
+          texts,
+          fullCanvas: fullCanvasData,
+        });
+      });
+      result[lang.code] = langJson;
+    });
+
+    handleExportAsJson(result);
+    return result;
+  };
+
+  if (translations && language) {
+    translatedCanvasesRef.current[language] = translations[
+      language
+    ].canvases.map((c: any, index: number) => ({
+      id: `${language}-canvas-${index}`,
+      items: { texts: c.texts,canvasData:c.fullCanvas },
+    }));
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
-      {/* Trigger Button */}
       <Dialog.Trigger>
-        <Button
-          color="blue"
-          variant="solid"
-          className="!cursor-pointer"
-          size="2"
-        >
-          <Download size={16} className="mr-2 cursor-pointer" />
+        <Button color="blue" variant="solid" size="2">
+          <Download size={16} className="mr-2" />
           Export Screenshots
         </Button>
       </Dialog.Trigger>
 
-      {/* Dialog Content */}
       <Dialog.Content className="max-w-md p-6">
         <Dialog.Title>Export Screenshots</Dialog.Title>
-        <Dialog.Description className="mb-4 text-gray-600">
-          Choose a device preset, then click “Export.” Each canvas will be
-          bundled into a ZIP at that resolution.
-        </Dialog.Description>
-        <Grid
-          columns="2"
-          gap="3"
-          align="start"
-          className="mt-6"
-          justify={"center"}
-          width="auto"
-        >
-          {/* Mode Selection */}
-          {/* <Flex direction="column" gap="2" className="mb-4">
-            <Label className="">Mode</Label>
-            <RadioGroup.Root
-              value={mode}
-              onValueChange={(val) => setMode(val as ExportMode)}
-              orientation="vertical"
-            >
-              <RadioGroup.Item value="minimum" className="mb-1">
-                <span className="text-sm">Minimum (2 screenshots)</span>
-              </RadioGroup.Item>
-              <RadioGroup.Item value="app-highly-recommended" className="mb-1 ">
-                App – Highly Recommended (≥4 screenshots)
-              </RadioGroup.Item>
-              <RadioGroup.Item value="game-highly-recommended" className="">
-                Game – Highly Recommended (≥3 screenshots)
-              </RadioGroup.Item>
-            </RadioGroup.Root>
-          </Flex> */}
 
-          {/* Preset Selection */}
-          {/* <Flex direction="column" gap="2" className="mb-4">
-            <Label className="">Device Preset</Label>
-            <RadioGroup.Root
-              value={preset}
-              onValueChange={(val) => setPreset(val as ScreenshotPreset)}
-              orientation="vertical"
-            >
-              <RadioGroup.Item value="phone-portrait" className="mb-1 ">
-                Phone (Portrait 1080×1920)
-              </RadioGroup.Item>
-              <RadioGroup.Item value="phone-landscape" className="mb-1 ">
-                Phone (Landscape 1920×1080)
-              </RadioGroup.Item>
-              <RadioGroup.Item value="tablet-portrait">
-                Tablet (Portrait 1200×1920)
-              </RadioGroup.Item>
-            </RadioGroup.Root>
-          </Flex> */}
-
-          {/* Orientation Override */}
-          <Flex direction="column" gap="2" className="mb-4">
-            <Label className="text-sm">Orientation</Label>
-            <RadioGroup.Root
-              value={orientation}
-              onValueChange={(val) => setOrientation(val as any)}
-              orientation="horizontal"
-            >
-              <RadioGroup.Item value="portrait" className="mr-4">
-                Portrait
-              </RadioGroup.Item>
-              <RadioGroup.Item value="landscape">Landscape</RadioGroup.Item>
-            </RadioGroup.Root>
-          </Flex>
-
-          {/* Format Selection */}
-          <Flex direction="column" gap="2" className="mb-4">
-            <Label className="">Format</Label>
-            <RadioGroup.Root
-              value={format}
-              onValueChange={(val) => setFormat(val as any)}
-              orientation="horizontal"
-            >
-              <RadioGroup.Item value="jpeg" className="mr-4">
-                JPEG
-              </RadioGroup.Item>
-              <RadioGroup.Item value="png">PNG</RadioGroup.Item>
-            </RadioGroup.Root>
-          </Flex>
-        </Grid>
-
-        {/* Quality Checkbox */}
-        <Flex align="center" gap="2" className="mb-4">
-          <Checkbox
-            checked={highQuality}
-            id="quality-checkbox"
-            onCheckedChange={(checked) => setHighQuality(Boolean(checked))}
-          />
-          <label htmlFor="quality-checkbox" className="cursor-pointer">
-            Highest Quality
-          </label>
-        </Flex>
-
-        {/* Export Button */}
-        <div className="mt-6 flex justify-end items-center gap-2 space-x-2">
-          <Dialog.Close>
-            <Button variant="ghost" className="cursor-pointer" size="2">
-              Cancel
-            </Button>
-          </Dialog.Close>
-          <Button
-            color="green"
-            variant="solid"
-            className="cursor-pointer"
-            size="2"
-            onClick={exportAllCanvasAsPlayStoreScreenshots}
-            disabled={loading}
-          >
-            {loading ? "Exporting…" : "Export"}
-          </Button>
+        {/* Step Indicator */}
+        <div className="flex justify-between mb-4 text-sm">
+          {["Settings",
+          //  "Translations",
+          //  "Preview", 
+           "Export"].map(
+            (label, index) => (
+              <span
+                key={index}
+                className={`flex-1 text-center ${
+                  step === index ? "font-bold text-blue-600" : "text-gray-400"
+                }`}
+              >
+                {label}
+              </span>
+            )
+          )}
         </div>
+
+        {/* Step 0 - Settings */}
+        {step === 0 && (
+          <div>
+            <Dialog.Description className="mb-4 text-gray-600">
+              Choose a device preset, orientation, and format.
+            </Dialog.Description>
+            <Grid columns="2" gap="3" className="mt-6">
+              <Flex direction="column" gap="2">
+                <Label className="text-sm">Orientation</Label>
+                <RadioGroup.Root
+                  value={orientation}
+                  onValueChange={(val) => setOrientation(val as any)}
+                  orientation="horizontal"
+                >
+                  <RadioGroup.Item value="portrait">Portrait</RadioGroup.Item>
+                  <RadioGroup.Item value="landscape">Landscape</RadioGroup.Item>
+                </RadioGroup.Root>
+              </Flex>
+
+              <Flex direction="column" gap="2">
+                <Label className="text-sm">Format</Label>
+                <RadioGroup.Root
+                  value={format}
+                  onValueChange={(val) => setFormat(val as any)}
+                  orientation="horizontal"
+                >
+                  <RadioGroup.Item value="jpeg">JPEG</RadioGroup.Item>
+                  <RadioGroup.Item value="png">PNG</RadioGroup.Item>
+                </RadioGroup.Root>
+              </Flex>
+            </Grid>
+
+            <Flex align="center" gap="2" className="mt-4">
+              <Checkbox
+                checked={highQuality}
+                id="quality-checkbox"
+                onCheckedChange={(checked) => setHighQuality(Boolean(checked))}
+              />
+              <label htmlFor="quality-checkbox" className="cursor-pointer">
+                Highest Quality
+              </label>
+            </Flex>
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setStep(1)}>Next</Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 1 - Translations */}
+        {/* {step === 1 && (
+          <div>
+            <Dialog.Description className="mb-4 text-gray-600">
+              <span>
+                This step generates a <strong>translation JSON</strong> file. It
+                contains all the texts from your canvases:
+              </span>
+            </Dialog.Description>
+            <ul className="list-disc list-inside mt-2 text-sm text-gray-500">
+              <li>
+                The first language (e.g. <code>en</code>) is pre-filled with
+                your original texts.
+              </li>
+              <li>
+                Other languages (e.g. <code>fr</code>, <code>es</code>) have
+                empty fields for you to fill in.
+              </li>
+              <li>
+                You can share this JSON with translators or fill it in yourself.
+              </li>
+              <li>Re-import it to update texts in your canvases.</li>
+            </ul>
+            <TranslationStep
+              exportTexts={exportTexts}
+              setLanguage={setLanguage}
+              setTranslations={setTranslations}
+              canvases={sortedCanvasItems}
+              onBack={() => setStep((prev) => prev - 1)}
+              onNext={() => setStep((prev) => prev + 1)}
+            />
+          </div>
+        )} */}
+
+         {/* Step 2 - Preview  */}
+        {/* {step === 2 && (
+          <div>
+            <Dialog.Description className="mb-4 text-gray-600">
+              Here’s how your canvases will look before export.
+            </Dialog.Description>
+            
+            {translations && (
+              <div className="flex gap-4 mb-4">
+                {Object.keys(translations).map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setLanguage(lang)}
+                    className={`px-3 py-1 rounded ${
+                      language === lang
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200"
+                    }`}
+                  >
+                    {lang.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex flex-row max-w-full  items-start overflow-scroll justify-center">
+           
+              {language &&
+                translatedCanvasesRef.current[language]?.map((item, index) => (
+                  <CanvasComponent
+                    key={item.id}
+                    zoom={0.3}
+                    width={canvasWidth}
+                    height={canvasHeight}
+                    deleteCanvas={() => setConfirmOpen(true)}
+                    duplicateCanvas={canvasToDuplicate ?? undefined}
+                    onDuplicateCanvas={duplicateCanvas}
+                    onClick={() => setSelectedCanvasId(item.id)}
+                    isActive={item.id === selectedCanvasId}
+                    className="p-2"
+                    id={item.id}
+                    index={index}
+                    bgColor="#1a1a1b"
+                    transition={{
+                      duration: 5,
+                      idle: false,
+                      easing: "ease-in-out",
+                    }}
+                    onCanvasReady={handleCanvasReady}
+                    translations={item.items}
+                    isPreview={true}
+                  />
+                ))}
+            </div>
+            <div className="mt-6 flex justify-between">
+              <Button variant="ghost" onClick={() => setStep(1)}>
+                Back
+              </Button>
+              <Button onClick={() => setStep(3)}>Next</Button>
+            </div>
+          </div>
+        )} */}
+
+        {/* Step 3 - Export */}
+        {step === 1 && (
+          <div>
+            <Dialog.Description className="mb-4 text-gray-600">
+              Export all canvases as a ZIP of screenshots.
+            </Dialog.Description>
+            <div className="mt-6 flex justify-between">
+              <Button variant="ghost" onClick={() => setStep(2)}>
+                Back
+              </Button>
+              <Button
+                color="green"
+                onClick={exportAllCanvasAsPlayStoreScreenshots}
+                disabled={loading}
+              >
+                {loading ? "Exporting…" : "Export"}
+              </Button>
+            </div>
+          </div>
+        )}
       </Dialog.Content>
     </Dialog.Root>
   );
