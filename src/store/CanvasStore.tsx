@@ -1,12 +1,13 @@
-import { FabricImage, IText, type Canvas } from "fabric";
+import { FabricImage, IText, type Canvas, FabricObject } from "fabric";
 import { create } from "zustand";
-import type { CanvasItem } from "../../types";
+import type { CanvasItem } from "../types";
 import { toast } from "sonner";
 import {
+  addDeleteControl,
   countObjectsByType,
   disposeCanvas,
   findNextCanvasId,
-} from "../../pages/dashboard/utils/functions";
+} from "../pages/dashboard/utils/functions";
 
 // State shape
 interface CanvasState {
@@ -35,6 +36,8 @@ interface CanvasActions {
   addText: () => void;
   deleteCanvas: (id: string) => void;
   addFrame: (imageUrl: string) => Promise<void>;
+  applyFramesToAllCanvases: (imageUrl: string) => Promise<void>;
+  deleteCanvasObject: (object: FabricObject) => void;
 }
 
 // Zustand store
@@ -187,8 +190,47 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
 
       toast.error(`${id} deleted`, { duration: 500 });
     },
+    applyFramesToAllCanvases: async (phoneImageURL: string) => {
+      const { canvasItems, deleteCanvasObject } = get();
+      if (canvasItems.length !== 0) {
+        canvasItems.forEach(async (canvasItem) => {
+          const phoneImg = await FabricImage.fromURL(phoneImageURL);
+          const fitScale = Math.min(
+            canvasItem.canvas?.width! / phoneImg.width / 0.9!,
+            canvasItem.canvas?.height! / phoneImg.height / 0.9!
+          );
+          const scale = fitScale * 0.75;
+          phoneImg.set({
+            originX: "center",
+            originY: "center",
+            left: canvasItem.canvas?.width! / 2,
+            top: canvasItem.canvas?.height! / 2,
+            scaleX: scale,
+            scaleY: scale,
+            selectable: true,
+            hasControls: true,
+            // lockScalingX: true,
+            // lockScalingY: true,
+            // lockMovementX: true,
+            // lockMovementY: true,
+            hasBorders: true,
+          });
+
+          addDeleteControl(phoneImg, () => {
+            deleteCanvasObject(phoneImg);
+          });
+
+          canvasItem.canvas?.add(phoneImg);
+          canvasItem.canvas?.setActiveObject(phoneImg);
+          canvasItem.canvas?.requestRenderAll();
+        });
+      } else {
+        toast.error("No canvases available to apply frames.");
+        return;
+      }
+    },
     addFrame: async (phoneImageURL: string) => {
-      const { selectedCanvas } = get();
+      const { selectedCanvas, deleteCanvasObject } = get();
       if (!selectedCanvas) {
         toast.info("Please select a canvas first.");
         return;
@@ -223,9 +265,21 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
         hasBorders: true,
       });
 
+      addDeleteControl(phoneImg, () => {
+        deleteCanvasObject(phoneImg);
+      });
+
       selectedCanvas.add(phoneImg);
       selectedCanvas.setActiveObject(phoneImg);
       selectedCanvas.requestRenderAll();
+    },
+    deleteCanvasObject: (object: FabricObject) => {
+      const { selectedCanvas } = get();
+      if (!selectedCanvas) return;
+      if (selectedCanvas && object) {
+        selectedCanvas.remove(object);
+        selectedCanvas.requestRenderAll();
+      }
     },
   })
 );

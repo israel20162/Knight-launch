@@ -1,12 +1,11 @@
-import { Canvas, FabricText, type TFiller } from "fabric";
+import { FabricText, type TFiller } from "fabric";
 import { useState, useEffect } from "react";
 import { Button } from "@radix-ui/themes";
 import { X } from "lucide-react";
 import { Tooltip } from "../../../components/ui/tooltip";
-interface TextEditorProps {
-  selectedCanvas: Canvas | undefined;
-}
-export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
+import { useCanvasStore } from "../../../store/CanvasStore";
+
+export const TextEditor: React.FC = ({  }) => {
   const [selectedText, setSelectedText] = useState<FabricText | null>(null);
   const [isActive, setIsActive] = useState<boolean>(false);
   const [fontSize, setFontSize] = useState<number>(24);
@@ -15,6 +14,9 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
   const [fontWeight, setFontWeight] = useState<string>("normal");
   const [lineHeight, setLineHeight] = useState<number>();
   const [strokeColor, setStrokeColor] = useState<string | TFiller>("#000000");
+
+
+  const selectedCanvas = useCanvasStore(s=>s.selectedCanvas)
 
   const defaultBgColor = "#000000";
   const [backgroundColor, setBackgroundColor] = useState<string | TFiller>(

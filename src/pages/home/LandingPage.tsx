@@ -1,7 +1,7 @@
 import { Button, Card } from "@radix-ui/themes";
 import { Download, Image, Palette, Smartphone, ArrowRight } from "lucide-react";
 import { Link } from "react-router";
-import Header from "./components/Header";
+import Header from "../../components/Header";
 const Landing = () => {
   return (
     <div className="">
@@ -21,7 +21,7 @@ const Landing = () => {
             </p>
 
             <div className="flex justify-center space-x-4 mb-12">
-              <Link to="/dashboard">
+              <Link to="/dashboard" reloadDocument>
                 <Button
                   size="3"
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"

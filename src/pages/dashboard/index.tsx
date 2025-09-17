@@ -15,7 +15,7 @@ import {
   TransformComponent,
   useControls,
 } from "react-zoom-pan-pinch";
-import { CanvasComponent } from "../../components/CanvasComponent";
+import { CanvasComponent } from "./components/CanvasComponent";
 import { DragDropProvider } from "@dnd-kit/react";
 import { move } from "@dnd-kit/helpers";
 import RightSidebar from "./RightSidebar";
@@ -23,39 +23,37 @@ import { Tooltip } from "../../components/ui/tooltip";
 import ExportDialog from "./components/ExportDialog";
 import Logo from "../../components/ui/logo";
 import { useKeyboardShortcuts } from "../../lib/hooks/useKeyboardShortcuts";
-
 import { ConfirmDialog } from "../../components/ui/confirmDialog";
-import { useCanvasStore } from "../../context/store/CanvasStore";
+import { useCanvasStore } from "../../store/CanvasStore";
 
 export default function Dashboard() {
   const [zoom, setZoom] = useState<number>(0.3);
-  const canvasAreaRef = useRef<HTMLDivElement | null>(null);
+  const canvasAreaRef = useRef<HTMLDivElement | null>(null); // Ref for the canvas area
 
-  var canvasWidth = 450;
-  var canvasHeight = 800;
-  const deleteCanvas = useCanvasStore((s) => s.deleteCanvas);
-  const addText = useCanvasStore((s) => s.addText);
-  const canvasToDuplicate = useCanvasStore((s) => s.canvasToDuplicate);
-  const handleCanvasReady = useCanvasStore((s) => s.handleCanvasReady);
-  // const setCanvasItems = useCanvasStore((s) => s.setCanvasItems);
-  const setSortedCanvasItems = useCanvasStore((s) => s.setSortedCanvasItems);
-  const selectedCanvas = useCanvasStore((s) => s.selectedCanvas);
-  const setSelectedCanvas = useCanvasStore((s) => s.setSelectedCanvas);
-  const sortedCanvasItems = useCanvasStore((s) => s.sortedCanvasItems);
-  const addNewCanvas = useCanvasStore((s) => s.addNewCanvas);
-  const canvasItems = useCanvasStore((s) => s.canvasItems);
-  const duplicateCanvas = useCanvasStore((s) => s.duplicateCanvas);
-  // Get the currently selected canvas id
-  const setSelectedCanvasId = useCanvasStore((s) => s.setSelectedCanvasId);
-  const selectedCanvasId = useCanvasStore((s) => s.selectedCanvasId);
+  var canvasWidth = 450; // default canvas width
+  var canvasHeight = 800; // default canvas height
 
-  const [isDeletable, setIsDeletable] = useState(false);
-  const [isTextActive, setIsTextActive] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [disablePanning, setDisablePanning] = useState(false);
-  const [shiftPressed, setShiftPressed] = useState(false);
-  const [showLeft, setShowLeft] = useState(false);
-  const [showRight, setShowRight] = useState(false);
+  const deleteCanvas = useCanvasStore((s) => s.deleteCanvas); // Function to delete a canvas
+  const addText = useCanvasStore((s) => s.addText); // Function to add text to the canvas
+  const canvasToDuplicate = useCanvasStore((s) => s.canvasToDuplicate); // Get the canvas to duplicate
+  const handleCanvasReady = useCanvasStore((s) => s.handleCanvasReady); // Callback when a canvas is ready
+  const setSortedCanvasItems = useCanvasStore((s) => s.setSortedCanvasItems); // Function to update the order of canvas items
+  const selectedCanvas = useCanvasStore((s) => s.selectedCanvas); // Get the currently selected canvas
+  const setSelectedCanvas = useCanvasStore((s) => s.setSelectedCanvas); // Function to set the currently selected canvas
+  const sortedCanvasItems = useCanvasStore((s) => s.sortedCanvasItems); // Get the list of canvas items in sorted order
+  const addNewCanvas = useCanvasStore((s) => s.addNewCanvas); // Function to add a new canvas
+  const canvasItems = useCanvasStore((s) => s.canvasItems); // Get the list of all canvas items
+  const duplicateCanvas = useCanvasStore((s) => s.duplicateCanvas); // Function to duplicate a canvas
+  const setSelectedCanvasId = useCanvasStore((s) => s.setSelectedCanvasId); // Function to set the currently selected canvas id
+  const selectedCanvasId = useCanvasStore((s) => s.selectedCanvasId); // Get the currently selected canvas id
+
+  const [isDeletable, setIsDeletable] = useState(false); // State to track if the selected object can be deleted
+  const [isTextActive, setIsTextActive] = useState(false); // State to track if the selected object is text
+  const [confirmOpen, setConfirmOpen] = useState(false); //  State to control the visibility of the delete confirmation dialog
+  const [disablePanning, setDisablePanning] = useState(false); // State to control whether panning is disabled
+  const [shiftPressed, setShiftPressed] = useState(false); // State to track if the Shift key is pressed
+  const [showLeft, setShowLeft] = useState(false); // State to control the visibility of the left sidebar
+  const [showRight, setShowRight] = useState(false); // State to control the visibility of the right sidebarmmm
 
   // Zoom Controls Component
   const ZoomControls = () => {
@@ -85,10 +83,9 @@ export default function Dashboard() {
     }
   };
 
-  
-
   function deleteFrame() {
     const activeObject = selectedCanvas?.getActiveObject();
+
     if (activeObject) {
       selectedCanvas?.remove(activeObject);
       selectedCanvas?.requestRenderAll();
@@ -206,7 +203,7 @@ export default function Dashboard() {
           <Logo />
         </h2>
 
-        <LeftSidebar  />
+        <LeftSidebar />
       </aside>
 
       {/* Main Area */}
@@ -310,7 +307,7 @@ export default function Dashboard() {
                         className="p-2"
                         id={item.id}
                         index={index}
-                        bgColor="#1a1a1b"
+                        bgColor="#1b1b1b"
                         transition={{
                           duration: 5,
                           idle: false,

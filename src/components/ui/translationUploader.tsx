@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { toast } from "sonner";
-import { useExportStore } from "../../context/store/ExportStore";
+import { useExportStore } from "../../store/ExportStore";
 export interface TranslationComponetProps {
   setTranslations: (translations: any) => void;
   setLanguage: (language: string | null) => void;

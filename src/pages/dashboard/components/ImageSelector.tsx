@@ -1,19 +1,23 @@
 import React, { useState, useEffect, type ChangeEvent, useRef } from "react";
 import { FabricImage, type Canvas, Rect, Group } from "fabric";
 import { X } from "lucide-react";
-import { useAppContext } from "../../../context/AppContext";
 import { Upload } from "lucide-react";
+import { addDeleteControl } from "../utils/functions";
+import { useAppFrameStore } from "../../../store/AppFrameStore";
+import { useCanvasStore } from "../../../store/CanvasStore";
+
 interface ImageSelectorProps {
   selectedCanvasId: string;
   selectedCanvas: Canvas | undefined;
 }
 export const ImageSelector: React.FC<ImageSelectorProps> = ({
   selectedCanvas,
-  selectedCanvasId,
+  // selectedCanvasId,
 }) => {
   const [images, setImages] = useState<string[]>([]);
 
-  const { device } = useAppContext();
+  const { device } = useAppFrameStore();
+  const { deleteCanvasObject } = useCanvasStore();
 
   // Load images from localStorage on component mount
   useEffect(() => {
@@ -97,7 +101,11 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       alert("Please select a phone frame image first.");
       return;
     }
-    const upscaledImageURL = await upscaleImage(imageURL, screenWidth, screenHeight);
+    const upscaledImageURL = await upscaleImage(
+      imageURL,
+      screenWidth,
+      screenHeight
+    );
     // console.log(upscaledImageURL, selectedCanvasId);
     const innerImg = await FabricImage.fromURL(upscaledImageURL, {
       crossOrigin: "anonymous",
@@ -176,6 +184,9 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       // lockRotation: true,
     });
     // selectedCanvas.sendObjectToBack(innerImg);
+    addDeleteControl(group, () => {
+      deleteCanvasObject(group);
+    }) // Add delete button to group
     selectedCanvas.add(group);
     selectedCanvas.setActiveObject(group);
     selectedCanvas.requestRenderAll();

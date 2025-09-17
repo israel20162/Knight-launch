@@ -1,9 +1,10 @@
 import { Canvas, FabricImage } from "fabric";
 import React, { useCallback, useEffect, useState } from "react";
-import { CanvasComponent } from "../../../components/CanvasComponent";
+import { CanvasComponent } from "./CanvasComponent";
 import type { CanvasItem, layoutType } from "../../../types";
 import { layouts } from "../utils/layouts";
-import { countObjectsByType } from "../utils/functions";
+import { addDeleteControl, countObjectsByType } from "../utils/functions";
+import { useCanvasStore } from "../../../store/CanvasStore";
 interface LayoutSelectorProps {
   selectedCanvas: Canvas | undefined;
 }
@@ -14,6 +15,8 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
   const deviceLayouts = layouts();
   const layoutCanvasHeight = 192;
   const layoutCanvaswidth = 108;
+
+  const { deleteCanvasObject } = useCanvasStore();
 
   const add = async (items: layoutType) => {
     if (!selectedCanvas) {
@@ -55,8 +58,11 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
       selectable: true,
       hasControls: true,
       hasBorders: false,
-      lockMovementX: true, // Disables horizontal movement
+      // lockMovementX: true, // Disables horizontal movement
       lockMovementY: true,
+    });
+    addDeleteControl(phoneImg, () => {
+      deleteCanvasObject(phoneImg);
     });
 
     selectedCanvas?.add(phoneImg);

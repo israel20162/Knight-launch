@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import type { CanvasItem } from "../../../../types";
 import { Separator, Section, Button } from "@radix-ui/themes";
 import TranslationsUploader from "../../../../components/ui/translationUploader";
-import { useCanvasStore } from "../../../../context/store/CanvasStore";
+import { useCanvasStore } from "../../../../store/CanvasStore";
 
 interface TranslationStepProps {
   canvases: CanvasItem[];
@@ -41,7 +41,7 @@ const TranslationStep: React.FC<TranslationStepProps> = ({
 
   const [newLangCode, setNewLangCode] = useState("");
   const [newLangName, setNewLangName] = useState("");
-  
+
   const toggleLanguage = (code: string, name: string) => {
     setSelectedLanguages((prev) =>
       prev.find((l) => l.code === code)
@@ -171,7 +171,6 @@ const TranslationStep: React.FC<TranslationStepProps> = ({
               setTranslations={setTranslations}
               setLanguage={setLanguage}
               zoom={0.3}
-            
             />
           </div>
         </div>

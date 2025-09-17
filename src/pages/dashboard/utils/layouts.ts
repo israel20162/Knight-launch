@@ -1,11 +1,9 @@
-import { useContext } from "react";
 import type { layoutType } from "../../../types";
-import { AppContext } from "../../../context/AppContext";
-
+import { useAppFrameStore } from "../../../store/AppFrameStore";
 
 
 export const layouts = (): layoutType[] => {
-    const { device } = useContext(AppContext);
+    const { device } = useAppFrameStore();
 
     const currentDeviceImg = device.imageUrl;
     return [

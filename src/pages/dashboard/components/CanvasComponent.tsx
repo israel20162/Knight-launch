@@ -2,8 +2,8 @@ import { Canvas, FabricImage, FabricText, Rect } from "fabric";
 import React, { useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { ArrowLeftRight, Copy, Trash2 } from "lucide-react";
-import type { CanvasComponentProps } from "../types";
-import { Tooltip } from "./ui/tooltip";
+import type { CanvasComponentProps } from "../../../types";
+import { Tooltip } from "../../../components/ui/tooltip";
 // Reusable Canvas Component
 export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
   ({
@@ -49,7 +49,6 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
         //   fabricCanvas.renderAll();
         // });
 
-        
         fabricCanvas.backgroundColor =
           duplicateCanvas?.backgroundColor || bgColor || "#1a1a1b";
         if (duplicateCanvas?.backgroundImage) {
@@ -67,10 +66,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
           fabricCanvas.requestRenderAll();
         });
         if (canvasRef.current && translations?.canvasData) {
-          fabricCanvas.loadFromJSON(
-            translations?.canvasData,
-            
-          );
+          fabricCanvas.loadFromJSON(translations?.canvasData);
           fabricCanvas.requestRenderAll();
         }
         if (translations?.texts && Array.isArray(translations?.texts)) {

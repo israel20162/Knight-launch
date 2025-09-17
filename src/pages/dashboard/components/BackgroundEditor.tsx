@@ -3,18 +3,10 @@ import { Canvas, Gradient, FabricImage, type TFiller, Color } from "fabric";
 import { SegmentedControl } from "@radix-ui/themes";
 import { Tooltip } from "../../../components/ui/tooltip";
 import { ChevronDown, X } from "lucide-react";
-import type { CanvasItem } from "../../../types";
+import { useCanvasStore } from "../../../store/CanvasStore";
 
-interface BackgroundEditorProps {
-  selectedCanvas: Canvas | undefined;
-  allCanvases: CanvasItem[]; // Added prop to handle all canvases
-}
-
-export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
-  selectedCanvas,
-  allCanvases,
-}) => {
-  const defaultBgColor = "#1a1a1a";
+export const BackgroundEditor: React.FC = ({}) => {
+  const defaultBgColor = "#1b1b1b";
   const [backgroundColor, setBackgroundColor] = useState<string | TFiller>(
     defaultBgColor
   );
@@ -22,7 +14,7 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   const [backgroundType, setBackgroundType] = useState<
     "solid" | "gradient" | "pattern" | "image"
   >("solid");
-  const [gradientColor1, setGradientColor1] = useState("#1a1a1a");
+  const [gradientColor1, setGradientColor1] = useState("#1b1b1b");
   const [gradientColor2, setGradientColor2] = useState("#4a4a4a");
   const [appliedGradient, setAppliedGradient] = useState<string | null>(null);
   const [gradientDirection, setGradientDirection] = useState<
@@ -33,6 +25,9 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
   const [openAccordion, toggleAccordion] = useState<"size" | "presets" | null>(
     null
   );
+
+  const selectedCanvas = useCanvasStore((s) => s.selectedCanvas);
+  const allCanvases = useCanvasStore((s) => s.sortedCanvasItems);
 
   const [bgPosX, setBgPosX] = useState(0);
   const [bgPosY, setBgPosY] = useState(0);
@@ -166,7 +161,7 @@ export const BackgroundEditor: React.FC<BackgroundEditorProps> = ({
 
     selectedCanvas.renderAll();
   };
-  
+
   const resizeCanvas = () => {
     if (selectedCanvas) {
       // alert(canvasWidth);

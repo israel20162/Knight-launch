@@ -1,6 +1,6 @@
 import type { CanvasItem } from "../../../types";
-import { Canvas, FabricObject } from "fabric";
-
+import { Canvas, FabricObject, InteractiveFabricObject } from "fabric";
+import { Control } from "fabric";
 export const disposeCanvas = (canvasItem: CanvasItem | undefined) => {
   if (canvasItem?.canvas) {
     try {
@@ -82,4 +82,45 @@ export function countObjectsByType<
     }
     return count;
   }, 0);
+}
+
+
+
+interface RenderIconParams {
+  ctx: CanvasRenderingContext2D;
+  left: number;
+  top: number;
+  _styleOverride: any;
+  fabricObject: InteractiveFabricObject;
+}
+const deleteIconUrl = "/icons/deleteFrame.svg";
+
+const deleteImg = new Image();
+deleteImg.src = deleteIconUrl;
+
+function renderIcon(
+  ctx: RenderIconParams["ctx"],
+  left: RenderIconParams["left"],
+  top: RenderIconParams["top"],
+  _styleOverride: RenderIconParams["_styleOverride"]
+  // fabricObject: RenderIconParams["fabricObject"]
+): void {
+  const size = 24;
+  ctx.save();
+  ctx.translate(left, top);
+  // ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+  ctx.drawImage(deleteImg, -size / 2, -size / 2, size, size);
+  ctx.restore();
+}
+
+
+export function addDeleteControl(object: FabricObject, onDelete: () => void) {
+  object.controls.deleteControl = new Control({
+    x: 0.5,
+    y: -0.5,
+    offsetY: 24,
+    cursorStyle: "pointer",
+    render: renderIcon,
+    mouseUpHandler:  onDelete,
+  });
 }

@@ -1,22 +1,29 @@
-import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { DeviceType } from "../../../types";
-import { useAppContext } from "../../../context/AppContext";
 import { devices } from "../utils/devices";
+import { ChevronDown, Layers } from "lucide-react";
 interface DeviceSelectorProps {
-  onDeviceSelect?: (device: string) => void;
-  selectedDevice?: string | null;
+  // onDeviceSelect?: (device: string) => void;
+  // selectedDevice?: string | null;
 }
+import { Tooltip } from "../../../components/ui/tooltip";
+import { useAppFrameStore } from "../../../store/AppFrameStore";
+import { useCanvasStore } from "../../../store/CanvasStore";
 
-export const DeviceSelector = ({
-  onDeviceSelect,
-}: //   selectedDevice,
+export const DeviceSelector = ({}: // onDeviceSelect,
+// selectedDevice,
+//   selectedDevice,
 DeviceSelectorProps) => {
   const [openCategory, setOpenCategory] = useState<string | null>("Phon");
   const [selectedDevice, setSelectedDevice] = useState<DeviceType>(devices[0]);
   // saves current device to global context
-  const { updateDevice } = useAppContext();
-
+  const updateDevice = useAppFrameStore((s) => s.updateDevice);
+  const addFrame = useCanvasStore((s) => s.addFrame);
+  const applyFramesToAllCanvases = useCanvasStore(
+    (s) => s.applyFramesToAllCanvases
+  );
+  // const selectedDevice = useAppFrameStore((s) => s.device);
+  // toggle category open/close
   const toggleCategory = (category: string) => {
     setOpenCategory((prev) => (prev === category ? null : category));
   };
@@ -26,10 +33,12 @@ DeviceSelectorProps) => {
     return () => {};
   }, [selectedDevice]);
   return (
+    // 👈 add Layers (or another icon you like)
+
     <div className="no-scrollbar min-w-full">
-      <div className="space-y-3 ">
+      <div className="space-y-3">
         {categories.map((category) => (
-          <div key={category} className=" border border-gray-200 rounded">
+          <div key={category} className="border border-gray-200 rounded">
             <button
               className="w-full flex justify-between items-center px-4 py-3 text-sm font-medium"
               onClick={() => toggleCategory(category)}
@@ -49,37 +58,56 @@ DeviceSelectorProps) => {
                   .map((device) => {
                     const Icon = device.icon;
                     return (
-                      <button
+                      <div
                         key={device.id}
-                        onClick={() => {
-                          setSelectedDevice(device);
-                          onDeviceSelect?.(device.imageUrl);
-                          setSelectedDevice(device);
-                          updateDevice(device);
-                        }}
-                        className={`flex items-start gap-3 w-full p-2 rounded border transition-all text-left ${
+                        className={`flex items-center justify-between gap-2 p-2 rounded border transition-all ${
                           selectedDevice?.id === device.id
                             ? "bg-blue-50 border-blue-400"
                             : "border-gray-200 hover:border-blue-300"
                         }`}
                       >
-                        <Icon className="w-5 h-5 mt-1" />
-                        <div>
-                          <div className="flex items-center gap-">
-                            <span className="font-medium capitalize text-sm  text-ellipsis">
-                              {device.name}
-                            </span>
-                            {device.popular && (
-                              <span className="bg-blue-100 text-blue-700 text-[10px] ml-1  py-0.5 rounded">
-                                Popular
+                        {/* Select single canvas */}
+                        <button
+                          onClick={() => {
+                            setSelectedDevice(device);
+                            addFrame(device.imageUrl);
+                            updateDevice(device);
+                          }}
+                          className="flex items-start gap-3 text-left flex-1"
+                        >
+                          <Icon className="w-5 h-5 mt-1" />
+                          <div>
+                            <div className="flex items-center gap-1">
+                              <span className="font-medium capitalize text-sm text-ellipsis">
+                                {device.name}
                               </span>
-                            )}
+                              {device.popular && (
+                                <span className="bg-blue-100 text-blue-700 text-[10px] ml-1 py-0.5 rounded">
+                                  Popular
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {device.dimensions}
+                            </p>
                           </div>
-                          <p className="text-xs text-gray-500">
-                            {device.dimensions}
-                          </p>
-                        </div>
-                      </button>
+                        </button>
+
+                        {/* Apply to ALL canvases (icon button) */}
+                        <button
+                          onClick={() => {
+                            applyFramesToAllCanvases(device.imageUrl);
+                            setSelectedDevice(device);
+                            updateDevice(device);
+                          }}
+                          className="p-1 rounded hover:bg-blue-100"
+                          title="Apply to all canvases"
+                        >
+                          <Tooltip text="Apply to all canvases">
+                            <Layers className="w-4 h-4 text-blue-600" />
+                          </Tooltip>
+                        </button>
+                      </div>
                     );
                   })}
               </div>

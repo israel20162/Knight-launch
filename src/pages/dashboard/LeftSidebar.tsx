@@ -4,7 +4,7 @@ import { DeviceSelector } from "./components/DeviceSelector";
 import { ImageSelector } from "./components/ImageSelector";
 import { Tooltip } from "../../components/ui/tooltip";
 import { LayoutSelector } from "./components/LayoutSelector";
-import { useCanvasStore } from "../../context/store/CanvasStore";
+import { useCanvasStore } from "../../store/CanvasStore";
 interface LeftSidebarProps {}
 
 export default function LeftSidebar({}: LeftSidebarProps) {

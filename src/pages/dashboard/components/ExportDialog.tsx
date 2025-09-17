@@ -14,9 +14,9 @@ import { Label } from "@radix-ui/themes/components/context-menu";
 import type { CanvasItem } from "../../../types";
 import TranslationStep from "./exportComponents/TranslationStep";
 import { IText } from "fabric";
-import { CanvasComponent } from "../../../components/CanvasComponent";
-import { useCanvasStore } from "../../../context/store/CanvasStore";
-import { useExportStore } from "../../../context/store/ExportStore";
+import { CanvasComponent } from "./CanvasComponent";
+import { useCanvasStore } from "../../../store/CanvasStore";
+import { useExportStore } from "../../../store/ExportStore";
 type ScreenshotPreset =
   | "phone-portrait"
   | "phone-landscape"
@@ -34,13 +34,14 @@ interface ExportDialogProps {
   } | null;
 }
 
-export const ExportDialog: React.FC<ExportDialogProps> = ({
-  // sortedCanvasItems,
-}) => {
+export const ExportDialog: React.FC<ExportDialogProps> = (
+  {
+    // sortedCanvasItems,
+  }
+) => {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
-  
   const [mode, setMode] = useState<ExportMode>("minimum");
   const [preset, setPreset] = useState<ScreenshotPreset>("phone-portrait");
   const [orientation, setOrientation] = useState<"portrait" | "landscape">(
@@ -71,7 +72,6 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   const canvasToDuplicate = useCanvasStore((s) => s.canvasToDuplicate);
   const duplicateCanvas = useCanvasStore((s) => s.duplicateCanvas);
   const sortedCanvasItems = useCanvasStore((s) => s.sortedCanvasItems);
-
 
   async function exportAllCanvasAsPlayStoreScreenshots(): Promise<void> {
     if (sortedCanvasItems.length < 2) {
@@ -223,7 +223,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       language
     ].canvases.map((c: any, index: number) => ({
       id: `${language}-canvas-${index}`,
-      items: { texts: c.texts,canvasData:c.fullCanvas },
+      items: { texts: c.texts, canvasData: c.fullCanvas },
     }));
   }
 
@@ -241,21 +241,21 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
 
         {/* Step Indicator */}
         <div className="flex justify-between mb-4 text-sm">
-          {["Settings",
-          //  "Translations",
-          //  "Preview", 
-           "Export"].map(
-            (label, index) => (
-              <span
-                key={index}
-                className={`flex-1 text-center ${
-                  step === index ? "font-bold text-blue-600" : "text-gray-400"
-                }`}
-              >
-                {label}
-              </span>
-            )
-          )}
+          {[
+            "Settings",
+            //  "Translations",
+            //  "Preview",
+            "Export",
+          ].map((label, index) => (
+            <span
+              key={index}
+              className={`flex-1 text-center ${
+                step === index ? "font-bold text-blue-600" : "text-gray-400"
+              }`}
+            >
+              {label}
+            </span>
+          ))}
         </div>
 
         {/* Step 0 - Settings */}
@@ -341,7 +341,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           </div>
         )} */}
 
-         {/* Step 2 - Preview  */}
+        {/* Step 2 - Preview  */}
         {/* {step === 2 && (
           <div>
             <Dialog.Description className="mb-4 text-gray-600">
@@ -410,7 +410,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
               Export all canvases as a ZIP of screenshots.
             </Dialog.Description>
             <div className="mt-6 flex justify-between">
-              <Button variant="ghost" onClick={() => setStep(2)}>
+              <Button variant="ghost" onClick={() => setStep(0)}>
                 Back
               </Button>
               <Button
