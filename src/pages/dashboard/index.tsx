@@ -211,7 +211,7 @@ export default function Dashboard() {
         {/* Top Toolbar */}
         <div className="flex items-center fixed z-30 w-full bg-white  p-2 gap-2 shadow-sm flex-wrap">
           {/* Mobile toggles */}
-          <button
+           <button
             className="md:hidden px-3 py-2 bg-gray-200 rounded"
             onClick={() => setShowLeft(!showLeft)}
           >
