@@ -60,7 +60,7 @@ export default function Dashboard() {
     const { zoomIn, zoomOut } = useControls();
 
     return (
-      <div className="absolute top-2 right-4 z-40 space-x-2 flex items-center">
+      <div className="bg-red-500  z-40 space-x-2 flex items-center">
         <button onClick={() => zoomOut(0.35)} className="p-2 rounded">
           <ZoomOut />
         </button>
@@ -160,7 +160,7 @@ export default function Dashboard() {
       keys: ["ctrl", "backspace"],
       handler: () => setConfirmOpen(true),
     },
-    { keys: [" "], handler: () => setShiftPressed(true) },
+    { keys: ["shift"], handler: () => setShiftPressed(true) },
   ]);
 
   useEffect(() => {
@@ -209,7 +209,7 @@ export default function Dashboard() {
       {/* Main Area */}
       <main className="flex-1 bg-gray-50 overflow-x-auto no-scrollbar relative">
         {/* Top Toolbar */}
-        <div className="flex items-center w-full bg-white p-2 gap-2 shadow-sm flex-wrap">
+        <div className="flex items-center fixed z-30 w-full bg-white p-2 gap-2 shadow-sm flex-wrap">
           {/* Mobile toggles */}
           <button
             className="md:hidden px-3 py-2 bg-gray-200 rounded"
@@ -224,7 +224,7 @@ export default function Dashboard() {
           >
             <PanelRightClose size={18} />
           </button>
-          <header className="flex w-full justify-center md:justify-start flex-row space-x-3 items-center text-sm">
+          <header className="flex w-full  justify-center relative md:justify-start flex-row space-x-3 items-center text-sm">
             <Tooltip text="Add Canvas">
               <button
                 onClick={addNewCanvas}
@@ -276,10 +276,10 @@ export default function Dashboard() {
           }}
         >
           <div className="hidden md:block">
-            <ZoomControls />
+            {/* <ZoomControls /> */}
           </div>
-          <TransformComponent wrapperClass="w-full" contentClass="no-scrollbar">
-            <div ref={canvasAreaRef} className="flex justify-center p-2">
+          <TransformComponent wrapperClass="w-full mt-40" contentClass="no-scrollbar">
+            <div ref={canvasAreaRef} className="flex justify-center p-2 mt-40">
               <DragDropProvider
                 onDragEnd={(event) => {
                   setSortedCanvasItems(move(sortedCanvasItems, event));
