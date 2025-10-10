@@ -69,15 +69,28 @@ export interface CanvasComponentProps {
   id: string;
   index: number;
   onClick?: () => void;
-  deleteCanvas: (id: string) => void
-  onCanvasReady: (id: string, canvas: Canvas) => void;
+  deleteCanvas: (id: string) => void;
+  isPreview?: boolean;
+  onCanvasReady: (id: string, canvas: Canvas, isPreview?: boolean) => void;
   onDuplicateCanvas: (id: string) => void;
-  duplicateCanvas?: Canvas ;
+  duplicateCanvas?: Canvas;
   isActive?: boolean;
   width?: number;
   height?: number;
   bgColor?: string;
   items?: layoutType;
+  translations?: {
+    texts?: {
+      canvasId: string;
+      text: string;
+      originX: "left" | "center" | "right";
+      left: number;
+      top: number;
+      fontSize: number;
+      fill: string;
+    }[]
+    canvasData?:any
+  };
   className?: string;
   zoom?: number;
   transition: { duration?: number; easing?: string; idle: boolean } | null

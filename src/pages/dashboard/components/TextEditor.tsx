@@ -1,12 +1,11 @@
-import { Canvas, FabricText, type TFiller } from "fabric";
+import { FabricText, type TFiller } from "fabric";
 import { useState, useEffect } from "react";
 import { Button } from "@radix-ui/themes";
 import { X } from "lucide-react";
 import { Tooltip } from "../../../components/ui/tooltip";
-interface TextEditorProps {
-  selectedCanvas: Canvas | undefined;
-}
-export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
+import { useCanvasStore } from "../../../store/CanvasStore";
+
+export const TextEditor: React.FC = ({}) => {
   const [selectedText, setSelectedText] = useState<FabricText | null>(null);
   const [isActive, setIsActive] = useState<boolean>(false);
   const [fontSize, setFontSize] = useState<number>(24);
@@ -15,6 +14,8 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
   const [fontWeight, setFontWeight] = useState<string>("normal");
   const [lineHeight, setLineHeight] = useState<number>();
   const [strokeColor, setStrokeColor] = useState<string | TFiller>("#000000");
+
+  const selectedCanvas = useCanvasStore((s) => s.selectedCanvas);
 
   const defaultBgColor = "#000000";
   const [backgroundColor, setBackgroundColor] = useState<string | TFiller>(
@@ -87,7 +88,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
   };
   return (
     <div className="w-full mx-auto flex flex-col overflow-y-scroll no-scrollbar">
-      <h2 className="text-lg font-bold mb-2">Edit Text </h2>
+      <h2 className="text-lg font-bold mb-2">Edit Text</h2>
 
       <div className="mb-2">
         <label
@@ -96,7 +97,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
           Text Content
         </label>
         <textarea
-          value={selText || selectedText?.text}
+          value={selText}
           onChange={(e) => {
             setSelText(e.target.value);
             updateTextProperty("text", e.target.value);
@@ -238,6 +239,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({ selectedCanvas }) => {
           <option value="delicious">Delicious</option>
           <option value="verdana">Verdana</option>
           <option value="georgia">Georgia</option>
+          <option value="poppins">Poppins</option>
           <option value="courier">Courier</option>
           <option value="comic sans ms">Comic Sans MS</option>
           <option value="impact">Impact</option>

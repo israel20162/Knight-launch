@@ -1,19 +1,27 @@
 import React, { useState, useEffect, type ChangeEvent, useRef } from "react";
 import { FabricImage, type Canvas, Rect, Group } from "fabric";
 import { X } from "lucide-react";
-import { useAppContext } from "../../../context/AppContext";
 import { Upload } from "lucide-react";
+import { addDeleteControl } from "../utils/functions";
+import { useAppFrameStore } from "../../../store/AppFrameStore";
+import { useCanvasStore } from "../../../store/CanvasStore";
+import { Tooltip } from "../../../components/ui/tooltip";
+import { toast } from "sonner";
+
 interface ImageSelectorProps {
   selectedCanvasId: string;
   selectedCanvas: Canvas | undefined;
 }
 export const ImageSelector: React.FC<ImageSelectorProps> = ({
   selectedCanvas,
-  selectedCanvasId,
+  // selectedCanvasId,
 }) => {
   const [images, setImages] = useState<string[]>([]);
 
-  const { device } = useAppContext();
+  const fileSizeLimit = 1024 * 1024 * 5; // 5MB in bytes
+
+  const { device } = useAppFrameStore();
+  const { deleteCanvasObject } = useCanvasStore();
 
   // Load images from localStorage on component mount
   useEffect(() => {
@@ -88,21 +96,25 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
     // screenOffsetY: number = 0
   ): Promise<void> {
     if (!selectedCanvas) {
-      alert("Please select a canvas first.");
+      toast.info("Please select a canvas first.");
       return;
     }
     const frame = selectedCanvas.getActiveObject();
 
     if (!frame || !(frame instanceof FabricImage)) {
-      alert("Please select a phone frame image first.");
+      toast.info("Please select a phone frame  first.");
       return;
     }
-    const upscaledImageURL = await upscaleImage(imageURL, screenWidth, screenHeight);
+    const upscaledImageURL = await upscaleImage(
+      imageURL,
+      screenWidth,
+      screenHeight
+    );
     // console.log(upscaledImageURL, selectedCanvasId);
     const innerImg = await FabricImage.fromURL(upscaledImageURL, {
       crossOrigin: "anonymous",
     });
-    console.log(innerImg.width, innerImg.height);
+   
 
     const imageWidth = innerImg.width || 0;
     const imageHeight = innerImg.height || 0;
@@ -176,6 +188,9 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       // lockRotation: true,
     });
     // selectedCanvas.sendObjectToBack(innerImg);
+    addDeleteControl(group, () => {
+      deleteCanvasObject(group);
+    }); // Add delete button to group
     selectedCanvas.add(group);
     selectedCanvas.setActiveObject(group);
     selectedCanvas.requestRenderAll();
@@ -189,14 +204,14 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
       if (!event.target.files) {
         return;
       }
-      if (event.target.files[0].size > 1024 * 1024) {
-        // 1mb in bytes
-        alert("File is too big!");
+      if (event.target.files[0].size > fileSizeLimit) {
+        // 5mb in bytes
+        toast.info("File is too big!");
         event.target.value = "";
         return;
       }
       if (images.length >= 5) {
-        alert("Can only upload 5 images!");
+        toast.info("Can only upload 5 images!");
         event.target.value = "";
         return;
       }
@@ -269,13 +284,15 @@ export const ImageSelector: React.FC<ImageSelectorProps> = ({
               alt={`Uploaded ${index}`}
               className="w-48 cursor-pointer h-48 object-cover rounded shadow"
             />
-            <button
-              onClick={() => handleRemoveImage(index)}
-              className="absolute top-1 right-1 text-xs bg-red-400 text-white rounded-full p-1 hover:bg-red-600"
-            >
-              <X width={12} height={12} />
-              {/* &times; */}
-            </button>
+            <Tooltip text="Delete Image">
+              <button
+                onClick={() => handleRemoveImage(index)}
+                className="absolute top-1 right-1 text-xs bg-red-400 text-white rounded-full p-1 hover:bg-red-600"
+              >
+                <X width={12} height={12} />
+                {/* &times; */}
+              </button>
+            </Tooltip>
           </div>
         ))}
       </div>

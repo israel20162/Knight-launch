@@ -12,11 +12,12 @@
   position: initial !important;
 }
 
+
 #canvas {
   border-style: dashed;
   border: 4px red;
 }
 
 button {
-  cursor: pointer ;
+  cursor: pointer !important;
 }

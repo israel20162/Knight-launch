@@ -1,9 +1,10 @@
-import { Canvas, FabricImage, IText } from "fabric";
+import { Canvas, FabricImage } from "fabric";
 import React, { useCallback, useEffect, useState } from "react";
-import { CanvasComponent } from "../../../components/CanvasComponent";
+import { CanvasComponent } from "./CanvasComponent";
 import type { CanvasItem, layoutType } from "../../../types";
 import { layouts } from "../utils/layouts";
-import { countObjectsByType } from "../utils";
+import { addDeleteControl, countObjectsByType } from "../utils/functions";
+import { useCanvasStore } from "../../../store/CanvasStore";
 interface LayoutSelectorProps {
   selectedCanvas: Canvas | undefined;
 }
@@ -14,6 +15,8 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
   const deviceLayouts = layouts();
   const layoutCanvasHeight = 192;
   const layoutCanvaswidth = 108;
+
+  const { deleteCanvasObject } = useCanvasStore();
 
   const add = async (items: layoutType) => {
     if (!selectedCanvas) {
@@ -55,8 +58,11 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
       selectable: true,
       hasControls: true,
       hasBorders: false,
-      lockMovementX: true, // Disables horizontal movement
+      // lockMovementX: true, // Disables horizontal movement
       lockMovementY: true,
+    });
+    addDeleteControl(phoneImg, () => {
+      deleteCanvasObject(phoneImg);
     });
 
     selectedCanvas?.add(phoneImg);
@@ -84,15 +90,17 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
         <div key={item.id} onClick={() => add(item)} className={`p- `}>
           <CanvasComponent
             height={layoutCanvasHeight}
-            deleteCanvas={() => { } }
+            deleteCanvas={() => {}}
             items={item}
             index={index}
             width={layoutCanvaswidth}
             id={`canvas-${item.id}`}
             onCanvasReady={handleCanvasReady}
-             onDuplicateCanvas={function (id: string): void {
+            onDuplicateCanvas={function (_: string): void {
               throw new Error("Function not implemented.");
-            } } transition={null}          />
+            }}
+            transition={null}
+          />
         </div>
       ))}
     </div>

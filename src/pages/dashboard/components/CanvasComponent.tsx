@@ -1,9 +1,9 @@
-import { Canvas, FabricImage, FabricText, Rect, Group } from "fabric";
+import { Canvas, FabricImage, FabricText, Rect } from "fabric";
 import React, { useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { ArrowLeftRight, Copy, Trash2 } from "lucide-react";
-import type { CanvasComponentProps } from "../types";
-import { Tooltip } from "./ui/tooltip";
+import type { CanvasComponentProps } from "../../../types";
+import { Tooltip } from "../../../components/ui/tooltip";
 // Reusable Canvas Component
 export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
   ({
@@ -21,10 +21,17 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     items,
     onDuplicateCanvas,
     duplicateCanvas,
+    translations,
+    isPreview = false,
   }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricCanvasRef = useRef<HTMLDivElement>(null);
-    const { ref, handleRef, isDragging, isDropping } = useSortable({
+    const {
+      ref: sortableRef,
+      handleRef,
+      isDragging,
+      isDropping,
+    } = useSortable({
       id,
       index,
       transition,
@@ -42,8 +49,6 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
         //   fabricCanvas.renderAll();
         // });
 
-        // If you want to copy background color and image from duplicateCanvas
-        // Uncomment the following lines
         fabricCanvas.backgroundColor =
           duplicateCanvas?.backgroundColor || bgColor || "#1a1a1b";
         if (duplicateCanvas?.backgroundImage) {
@@ -60,10 +65,27 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
           fabricCanvas.add(await obj.clone());
           fabricCanvas.requestRenderAll();
         });
+        if (canvasRef.current && translations?.canvasData) {
+          fabricCanvas.loadFromJSON(translations?.canvasData);
+          fabricCanvas.requestRenderAll();
+        }
+        if (translations?.texts && Array.isArray(translations?.texts)) {
+          translations?.texts.forEach((t) => {
+            const textObj = new FabricText(t.text, {
+              originX: t.originX || "center",
+              left: t.left,
+              top: t.top,
+              fontSize: t.fontSize,
+              fill: t.fill,
+            });
+            fabricCanvas.add(textObj);
+          });
+        }
 
         if (items?.text) {
           const text = new FabricText(items?.text.value, {
             originX: "center",
+
             left: fabricCanvas.getWidth() / 2,
             top: items.text.top,
             fontSize: items.text.fontSize,
@@ -104,7 +126,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
           loadImg();
         }
         fabricCanvas.renderAll();
-        onCanvasReady(id, fabricCanvas);
+        onCanvasReady(id, fabricCanvas, isPreview);
         return () => {
           fabricCanvas.dispose();
         };
@@ -194,21 +216,27 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     //  }
     // }
 
-    
-    
-
     return (
       <div
         className={` p-2  ${className} ${
           isActive ? "border border-blue-500 p-4" : ""
         } `}
-        ref={!items?.text && !items?.frame ? ref : fabricCanvasRef}
+        ref={!items?.text && !items?.frame ? sortableRef : fabricCanvasRef}
       >
-        <div onClick={onClick}>
+        <div
+          className={`${
+            isDragging || isDropping
+              ? `!size-[35%] transition-all ease-in-out duration-200 opacity-90`
+              : ""
+          }`}
+          onClick={onClick}
+        >
           {/* {id} */}
           <canvas
             className={`${
-              isDragging || isDropping ? `!size-[55%] opacity-90` : ""
+              isDragging || isDropping
+                ? `!size-[35%] transition-all ease-in-out duration-200 opacity-90`
+                : ""
             }`}
             ref={canvasRef}
           />
@@ -216,7 +244,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
         {!items?.text && !items?.frame && (
           <div
             className={`flex space-x-4 justify-end mt-2 ${
-              isDragging || isDropping ? `!size-[55%] opacity-90` : ""
+              isDragging || isDropping ? `!size-[35%] opacity-0` : ""
             }`}
           >
             <Tooltip text="Duplicate Canvas" placement="bottom">
@@ -236,7 +264,14 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
               </button>
             </Tooltip>
             <Tooltip text="Move Canvas" placement="bottom">
-              <button className="cursor-pointer text-gray-500" ref={handleRef}>
+              <button
+                className={`${
+                  isDragging || isDropping
+                    ? `!size-[35%] transition-all ease-in-out duration-200  cursor-pointer text-gray-500`
+                    : " cursor-pointer text-gray-500"
+                }`}
+                ref={handleRef}
+              >
                 <ArrowLeftRight />
               </button>
             </Tooltip>
