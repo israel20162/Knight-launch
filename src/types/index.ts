@@ -1,10 +1,9 @@
 import type { Canvas, TFiller } from "fabric";
 
-
 export interface DeviceFrame {
   id: string;
   name: string;
-  type: 'phone' | 'tablet';
+  type: "phone" | "tablet";
   imageUrl: string;
   width: number;
   height: number;
@@ -34,7 +33,7 @@ export interface GradientBackground {
 }
 
 export interface Background {
-  type: 'color' | 'gradient' | 'image';
+  type: "color" | "gradient" | "image";
   value: string | TFiller;
 }
 
@@ -53,19 +52,20 @@ export interface DeviceType {
   width: number;
   height: number;
   imageUrl: string;
-  rx?: number
-  ry?: number
-
+  rx?: number;
+  ry?: number;
 }
 
 export interface CanvasItem {
   id: string;
   nid?: number;
   canvas?: Canvas;
+  // Optional per-canvas dimensions. If not provided, fall back to global defaults.
+  width?: number;
+  height?: number;
 }
 
 export interface CanvasComponentProps {
-
   id: string;
   index: number;
   onClick?: () => void;
@@ -88,14 +88,13 @@ export interface CanvasComponentProps {
       top: number;
       fontSize: number;
       fill: string;
-    }[]
-    canvasData?:any
+    }[];
+    canvasData?: any;
   };
   className?: string;
   zoom?: number;
-  transition: { duration?: number; easing?: string; idle: boolean } | null
+  transition: { duration?: number; easing?: string; idle: boolean } | null;
   // selectedCanvas?: Canvas | undefined;
-
 }
 
 export interface layoutType {
@@ -116,6 +115,6 @@ export interface layoutType {
     top: number;
     scaleX?: number;
     scaleY?: number;
-    angle?: number
+    angle?: number;
   };
 }

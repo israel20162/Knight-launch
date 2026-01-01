@@ -211,7 +211,7 @@ export default function Dashboard() {
         {/* Top Toolbar */}
         <div className="flex items-center fixed z-30 w-full bg-white  p-2 gap-2 shadow-sm flex-wrap">
           {/* Mobile toggles */}
-           <button
+          <button
             className="md:hidden px-3 py-2 bg-gray-200 rounded"
             onClick={() => setShowLeft(!showLeft)}
           >
@@ -278,7 +278,10 @@ export default function Dashboard() {
           <div className="hidden md:block fixed top-1 right-64 z-40">
             <ZoomControls />
           </div>
-          <TransformComponent wrapperClass="w-full mt-40" contentClass="no-scrollbar">
+          <TransformComponent
+            wrapperClass="w-full mt-40"
+            contentClass="no-scrollbar"
+          >
             <div ref={canvasAreaRef} className="flex justify-center p-2 mt-40">
               <DragDropProvider
                 onDragEnd={(event) => {
@@ -291,8 +294,8 @@ export default function Dashboard() {
                       <CanvasComponent
                         key={item.id}
                         zoom={zoom}
-                        width={canvasWidth}
-                        height={canvasHeight}
+                        width={item.width ?? canvasWidth}
+                        height={item.height ?? canvasHeight}
                         deleteCanvas={() => setConfirmOpen(true)}
                         duplicateCanvas={canvasToDuplicate ?? undefined}
                         onDuplicateCanvas={duplicateCanvas}
@@ -304,7 +307,7 @@ export default function Dashboard() {
                           setSelectedCanvas(selectedCanvas || undefined);
                         }}
                         isActive={item.id === selectedCanvasId}
-                        className="p-2"
+                        className="p-2 relative"
                         id={item.id}
                         index={index}
                         bgColor="#1b1b1b"

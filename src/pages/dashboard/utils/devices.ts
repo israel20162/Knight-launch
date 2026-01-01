@@ -107,7 +107,8 @@ export const devices: DeviceType[] = [
     //     imageUrl: "/frames/IpadAir4.png",
     // },
     {
-        name: "Ipad ",
+        id: "ipad-1",
+        name: "Ipad",
         type: "tab",
         category: "Tablet",
         icon: Tablet,
@@ -127,6 +128,7 @@ export const devices: DeviceType[] = [
     // },
 
     {
+        id: "tecno-pova-neo",
         name: "Tecno Pova neo",
         type: "android",
         category: "Phone",

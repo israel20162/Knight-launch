@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { DeviceType } from "../../../types";
 import { devices } from "../utils/devices";
 import { ChevronDown, Layers } from "lucide-react";
@@ -22,6 +22,9 @@ DeviceSelectorProps) => {
   const applyFramesToAllCanvases = useCanvasStore(
     (s) => s.applyFramesToAllCanvases
   );
+  // local uploaded frames (object URLs)
+  const [uploads, setUploads] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   // const selectedDevice = useAppFrameStore((s) => s.device);
   // toggle category open/close
   const toggleCategory = (category: string) => {
@@ -70,7 +73,8 @@ DeviceSelectorProps) => {
                         <button
                           onClick={() => {
                             setSelectedDevice(device);
-                            addFrame(device.imageUrl);
+                            // pass device type so canvas store can handle tablets differently
+                            addFrame(device.imageUrl, device.type);
                             updateDevice(device);
                           }}
                           className="flex items-start gap-3 text-left flex-1"
@@ -96,7 +100,11 @@ DeviceSelectorProps) => {
                         {/* Apply to ALL canvases (icon button) */}
                         <button
                           onClick={() => {
-                            applyFramesToAllCanvases(device.imageUrl);
+                            // pass device type so applying to all canvases can adjust for tabs
+                            applyFramesToAllCanvases(
+                              device.imageUrl,
+                              device.type
+                            );
                             setSelectedDevice(device);
                             updateDevice(device);
                           }}
@@ -118,6 +126,66 @@ DeviceSelectorProps) => {
         <p className="text-sm text-gray-500 text-center pt-4">
           More device frames coming soon!
         </p>
+        {/* Upload custom frames */}
+        <div className="mt-4 border border-gray-200 rounded p-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium">Custom frames</span>
+            <div>
+              <input
+                id="frame-upload"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const url = URL.createObjectURL(f);
+                  setUploads((u) => [url, ...u]);
+                }}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-3 py-1 bg-slate-100 rounded text-sm"
+              >
+                Upload frame
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-auto p-1">
+            {uploads.length === 0 && (
+              <div className="text-xs text-gray-400">No custom frames yet</div>
+            )}
+            {uploads.map((u) => (
+              <div
+                key={u}
+                className="w-16 h-24 border rounded overflow-hidden p-1 cursor-pointer flex-shrink-0"
+                onClick={() => {
+                  addFrame(u);
+                }}
+                title="Click to add to selected canvas"
+              >
+                <img
+                  src={u}
+                  alt="frame"
+                  className="w-full h-full object-contain"
+                />
+                <div className="flex justify-center mt-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      applyFramesToAllCanvases(u);
+                    }}
+                    className="text-xs text-blue-600"
+                  >
+                    Apply to all
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

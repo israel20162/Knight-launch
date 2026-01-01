@@ -35,8 +35,12 @@ interface CanvasActions {
   addNewCanvas: () => void;
   addText: () => void;
   deleteCanvas: (id: string) => void;
-  addFrame: (imageUrl: string) => Promise<void>;
-  applyFramesToAllCanvases: (imageUrl: string) => Promise<void>;
+  addFrame: (imageUrl: string, deviceType?: string) => Promise<void>;
+  applyFramesToAllCanvases: (
+    imageUrl: string,
+    deviceType?: string
+  ) => Promise<void>;
+  setCanvasItemSize: (id: string, width: number, height: number) => void;
   deleteCanvasObject: (object: FabricObject) => void;
 }
 
@@ -100,7 +104,11 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
       const newId = `canvas-${maxNumber + 1}`;
 
       setSelectedCanvasId(newId);
-      const newItem: CanvasItem = { id: newId };
+      const newItem: CanvasItem = {
+        id: newId,
+        width: get().canvasWidth,
+        height: get().canvasHeight,
+      };
       set({
         canvasItems: [...canvasItems, newItem],
         selectedCanvasId: newId,
@@ -126,7 +134,11 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
         newId = `${baseId} (${copyIndex})`;
       }
 
-      const newItem: CanvasItem = { id: newId };
+      const newItem: CanvasItem = {
+        id: newId,
+        width: canvasToDuplicate?.width ?? get().canvasWidth,
+        height: canvasToDuplicate?.height ?? get().canvasHeight,
+      };
 
       // Insert right after original
       const originalIndex = canvasItems.findIndex((c) => c.id === id);
@@ -190,16 +202,24 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
 
       toast.error(`${id} deleted`, { duration: 500 });
     },
-    applyFramesToAllCanvases: async (phoneImageURL: string) => {
+    applyFramesToAllCanvases: async (
+      phoneImageURL: string,
+      deviceType?: string
+    ) => {
       const { canvasItems, deleteCanvasObject } = get();
       if (canvasItems.length !== 0) {
         canvasItems.forEach(async (canvasItem) => {
           const phoneImg = await FabricImage.fromURL(phoneImageURL);
-          const fitScale = Math.min(
-            canvasItem.canvas?.width! / phoneImg.width / 0.9!,
-            canvasItem.canvas?.height! / phoneImg.height / 0.9!
+          // Adjust scaling for tablets (tabs) to better fit wider/taller frames
+          const baseFit = Math.min(
+            canvasItem.canvas?.width! / phoneImg.width!,
+            canvasItem.canvas?.height! / phoneImg.height!
           );
-          const scale = fitScale * 0.75;
+          let scale = baseFit * 0.75;
+          if (deviceType === "tab" || deviceType === "tablet") {
+            // tablets often require a larger scale to look natural on canvas
+            scale = baseFit * 0.95;
+          }
           phoneImg.set({
             originX: "center",
             originY: "center",
@@ -229,7 +249,7 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
         return;
       }
     },
-    addFrame: async (phoneImageURL: string) => {
+    addFrame: async (phoneImageURL: string, deviceType?: string) => {
       const { selectedCanvas, deleteCanvasObject } = get();
       if (!selectedCanvas) {
         toast.info("Please select a canvas first.");
@@ -244,11 +264,14 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
 
       const phoneImg = await FabricImage.fromURL(phoneImageURL);
 
-      const fitScale = Math.min(
-        selectedCanvas.width! / phoneImg.width / 0.9!,
-        selectedCanvas.height! / phoneImg.height / 0.9!
+      const baseFit = Math.min(
+        selectedCanvas.width! / phoneImg.width!,
+        selectedCanvas.height! / phoneImg.height!
       );
-      const scale = fitScale * 0.75;
+      let scale = baseFit * 0.75;
+      if (deviceType === "tab" || deviceType === "tablet") {
+        scale = baseFit * 0.95; // larger for tablets
+      }
       phoneImg.set({
         originX: "center",
         originY: "center",
@@ -272,6 +295,36 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
       selectedCanvas.add(phoneImg);
       selectedCanvas.setActiveObject(phoneImg);
       selectedCanvas.requestRenderAll();
+    },
+    // Update a specific canvas item's dimensions and apply to the Fabric canvas if present
+    setCanvasItemSize: (id: string, width: number, height: number) => {
+      const { canvasItems, sortedCanvasItems } = get();
+      const updatedCanvasItems = canvasItems.map((item) =>
+        item.id === id ? { ...item, width, height } : item
+      );
+      const updatedSorted = sortedCanvasItems.map((item) =>
+        item.id === id ? { ...item, width, height } : item
+      );
+
+      // Update any live Fabric canvas size
+      updatedCanvasItems.forEach((item) => {
+        if (item.canvas && (item.width || item.height)) {
+          try {
+            if (typeof item.width === "number")
+              item.canvas.setWidth(item.width);
+            if (typeof item.height === "number")
+              item.canvas.setHeight(item.height);
+            item.canvas.requestRenderAll();
+          } catch (e) {
+            // ignore if canvas disposed
+          }
+        }
+      });
+
+      set({
+        canvasItems: updatedCanvasItems,
+        sortedCanvasItems: updatedSorted,
+      });
     },
     deleteCanvasObject: (object: FabricObject) => {
       const { selectedCanvas } = get();

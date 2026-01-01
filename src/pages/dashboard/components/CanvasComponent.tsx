@@ -4,6 +4,7 @@ import { useSortable } from "@dnd-kit/react/sortable";
 import { ArrowLeftRight, Copy, Trash2 } from "lucide-react";
 import type { CanvasComponentProps } from "../../../types";
 import { Tooltip } from "../../../components/ui/tooltip";
+import { useCanvasStore } from "../../../store/CanvasStore";
 // Reusable Canvas Component
 export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
   ({
@@ -11,6 +12,7 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
     index,
     onCanvasReady,
     className,
+    zoom,
     onClick,
     isActive,
     deleteCanvas,
@@ -26,6 +28,8 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
   }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricCanvasRef = useRef<HTMLDivElement>(null);
+    const fabricInstance = useRef<Canvas | null>(null);
+    const setCanvasItemSize = useCanvasStore((s) => s.setCanvasItemSize);
     const {
       ref: sortableRef,
       handleRef,
@@ -36,15 +40,60 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
       index,
       transition,
     });
-    useEffect(() => {
-      if (canvasRef.current) {
-        // const json = duplicateCanvas?.toJSON();
+    // A ref to track an in-progress resize drag
+    const resizeState = useRef({
+      listening: false,
+      startX: 0,
+      startY: 0,
+      startW: width || 300,
+      startH: height || 400,
+    });
 
+    const startResize = (e: React.MouseEvent) => {
+      e.preventDefault();
+      // record starting values
+      resizeState.current = {
+        listening: true,
+        startX: e.clientX,
+        startY: e.clientY,
+        startW: width || 300,
+        startH: height || 400,
+      };
+
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!resizeState.current.listening) return;
+        const dx = ev.clientX - resizeState.current.startX;
+        const dy = ev.clientY - resizeState.current.startY;
+        const scale = typeof zoom === "number" && zoom > 0 ? zoom : 1;
+        const newW = Math.max(
+          120,
+          Math.round(resizeState.current.startW + dx / scale)
+        );
+        const newH = Math.max(
+          120,
+          Math.round(resizeState.current.startH + dy / scale)
+        );
+        setCanvasItemSize?.(id, newW, newH);
+      };
+
+      const onMouseUp = () => {
+        resizeState.current.listening = false;
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      };
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    };
+    useEffect(() => {
+      // create Fabric canvas only once per component instance
+      if (canvasRef.current && !fabricInstance.current) {
         const fabricCanvas = new Canvas(canvasRef.current, {
           width: duplicateCanvas?.width || width || 222.5,
           height: duplicateCanvas?.height || height || 400,
           preserveObjectStacking: true,
         });
+        fabricInstance.current = fabricCanvas;
         // fabricCanvas.loadFromJSON(json,()=>{
         //   fabricCanvas.renderAll();
         // });
@@ -127,11 +176,37 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
         }
         fabricCanvas.renderAll();
         onCanvasReady(id, fabricCanvas, isPreview);
-        return () => {
-          fabricCanvas.dispose();
-        };
       }
-    }, [id, onCanvasReady, width, height]);
+
+      return () => {
+        // dispose on unmount
+        if (fabricInstance.current) {
+          try {
+            fabricInstance.current.dispose();
+          } catch (e) {
+            // ignore
+          }
+          fabricInstance.current = null;
+        }
+      };
+      // create once; duplicateCanvas/width/height will be handled by separate effect
+    }, [id, onCanvasReady, isPreview]);
+
+    // Update canvas size when width/height props change without recreating the canvas
+    useEffect(() => {
+      const fc = fabricInstance.current;
+      if (!fc) return;
+      const newW = width || 222.5;
+      const newH = height || 400;
+      try {
+        fc.setWidth(newW);
+        fc.setHeight(newH);
+        // Optionally update background image scale or reposition objects here
+        fc.requestRenderAll();
+      } catch (e) {
+        // ignore errors if canvas disposed
+      }
+    }, [width, height]);
 
     // async function cloneCanvasWithNewFrame(
     //   sourceCanvas: Canvas,
@@ -239,6 +314,38 @@ export const CanvasComponent: React.FC<CanvasComponentProps> = React.memo(
                 : ""
             }`}
             ref={canvasRef}
+          />
+          {/* Resize handle (bottom-right) */}
+          <div
+            onMouseDown={startResize}
+            title="Drag to resize canvas"
+            className="absolute bottom-10 right-0 w-10 opacity-0 h-10 bg-gray-300 cursor-se-resize z-50 rounded-full"
+          />
+          <div
+            onMouseDown={startResize}
+            title="Drag to resize canvas"
+            className="absolute top-0 right-0 w-10 opacity-0 h-10 bg-gray-300 cursor-ne-resize z-50 rounded-full"
+          />
+          <div
+            onMouseDown={startResize}
+            title="Drag to resize canvas"
+            className="absolute top-[12%] right-2 w-10 opacity-0 h-120 bg-gray-300 cursor-e-resize z-50 rounded-full"
+          />
+
+          <div
+            onMouseDown={startResize}
+            title="Drag to resize canvas"
+            className="absolute bottom-10 left-0 w-10 opacity-0 h-10 bg-gray-300 cursor-sw-resize z-50 rounded-full"
+          />
+          <div
+            onMouseDown={startResize}
+            title="Drag to resize canvas"
+            className="absolute top-0 left-0 w-10 opacity-0 h-10 bg-gray-300 cursor-nw-resize z-50 rounded-full"
+          />
+          <div
+            onMouseDown={startResize}
+            title="Drag to resize canvas"
+            className="absolute top-[12%] left-2  w-10 opacity-0 h-120 bg-gray-300 cursor-w-resize z-50 rounded-full"
           />
         </div>
         {!items?.text && !items?.frame && (
