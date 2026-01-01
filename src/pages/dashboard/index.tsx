@@ -60,7 +60,7 @@ export default function Dashboard() {
     const { zoomIn, zoomOut } = useControls();
 
     return (
-      <div className="bg-red-500  z-40 space-x-2 flex items-center">
+      <div className="  z-400 space-x-2 flex items-center">
         <button onClick={() => zoomOut(0.35)} className="p-2 rounded">
           <ZoomOut />
         </button>
@@ -275,8 +275,8 @@ export default function Dashboard() {
             setZoom(state.scale);
           }}
         >
-          <div className="hidden md:block">
-            {/* <ZoomControls /> */}
+          <div className="hidden md:block fixed top-1 right-64 z-40">
+            <ZoomControls />
           </div>
           <TransformComponent wrapperClass="w-full mt-40" contentClass="no-scrollbar">
             <div ref={canvasAreaRef} className="flex justify-center p-2 mt-40">
