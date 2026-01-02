@@ -35,10 +35,15 @@ interface CanvasActions {
   addNewCanvas: () => void;
   addText: () => void;
   deleteCanvas: (id: string) => void;
-  addFrame: (imageUrl: string, deviceType?: string) => Promise<void>;
+  addFrame: (
+    imageUrl: string,
+    deviceType?: string,
+    fill?: boolean
+  ) => Promise<void>;
   applyFramesToAllCanvases: (
     imageUrl: string,
-    deviceType?: string
+    deviceType?: string,
+    fill?: boolean
   ) => Promise<void>;
   setCanvasItemSize: (id: string, width: number, height: number) => void;
   deleteCanvasObject: (object: FabricObject) => void;
@@ -204,21 +209,31 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
     },
     applyFramesToAllCanvases: async (
       phoneImageURL: string,
-      deviceType?: string
+      deviceType?: string,
+      fill?: boolean
     ) => {
       const { canvasItems, deleteCanvasObject } = get();
       if (canvasItems.length !== 0) {
         canvasItems.forEach(async (canvasItem) => {
           const phoneImg = await FabricImage.fromURL(phoneImageURL);
           // Adjust scaling for tablets (tabs) to better fit wider/taller frames
-          const baseFit = Math.min(
+          const fitMin = Math.min(
             canvasItem.canvas?.width! / phoneImg.width!,
             canvasItem.canvas?.height! / phoneImg.height!
           );
-          let scale = baseFit * 0.75;
-          if (deviceType === "tab" || deviceType === "tablet") {
-            // tablets often require a larger scale to look natural on canvas
-            scale = baseFit * 0.95;
+          const fitMax = Math.max(
+            canvasItem.canvas?.width! / phoneImg.width!,
+            canvasItem.canvas?.height! / phoneImg.height!
+          );
+          // If fill is requested, use the larger fit (cover) so the image fills the canvas
+          let scale: number;
+          if (fill) {
+            scale = fitMax;
+          } else {
+            scale = fitMin * 0.75;
+            if (deviceType === "tab" || deviceType === "tablet") {
+              scale = fitMin * 0.95; // tablets slightly larger
+            }
           }
           phoneImg.set({
             originX: "center",
@@ -249,7 +264,11 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
         return;
       }
     },
-    addFrame: async (phoneImageURL: string, deviceType?: string) => {
+    addFrame: async (
+      phoneImageURL: string,
+      deviceType?: string,
+      fill?: boolean
+    ) => {
       const { selectedCanvas, deleteCanvasObject } = get();
       if (!selectedCanvas) {
         toast.info("Please select a canvas first.");
@@ -264,13 +283,23 @@ export const useCanvasStore = create<CanvasState & CanvasActions>(
 
       const phoneImg = await FabricImage.fromURL(phoneImageURL);
 
-      const baseFit = Math.min(
+      const fitMin = Math.min(
         selectedCanvas.width! / phoneImg.width!,
         selectedCanvas.height! / phoneImg.height!
       );
-      let scale = baseFit * 0.75;
-      if (deviceType === "tab" || deviceType === "tablet") {
-        scale = baseFit * 0.95; // larger for tablets
+      const fitMax = Math.max(
+        selectedCanvas.width! / phoneImg.width!,
+        selectedCanvas.height! / phoneImg.height!
+      );
+      let scale: number;
+      if (fill) {
+        // Use cover behavior to fill screen
+        scale = fitMax;
+      } else {
+        scale = fitMin * 0.75;
+        if (deviceType === "tab" || deviceType === "tablet") {
+          scale = fitMin * 0.95; // larger for tablets
+        }
       }
       phoneImg.set({
         originX: "center",
